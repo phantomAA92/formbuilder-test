@@ -5,7 +5,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
   Preview,
   Save,
-  Settings
+  Settings,
+  Close
 } from '@mui/icons-material';
 import {
   Alert,
@@ -16,7 +17,8 @@ import {
   Stack,
   TextField,
   Typography,
-  Divider
+  Drawer,
+  IconButton
 } from '@mui/material';
 
 import FormContentPanel from './form-content-panel';
@@ -45,6 +47,7 @@ export default function EnhancedFormBuilder({
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleTitleChange = (value) => {
     setFormTitle(value);
@@ -58,12 +61,14 @@ export default function EnhancedFormBuilder({
 
   const handleFieldSelect = (field) => {
     onSelectField && onSelectField(field);
+    setDrawerOpen(true);
   };
 
   const handleFieldDelete = (fieldId) => {
     onDeleteField && onDeleteField(fieldId);
     if (selectedField?.id === fieldId) {
       onSelectField && onSelectField(null);
+      setDrawerOpen(false);
     }
   };
 
@@ -95,8 +100,9 @@ export default function EnhancedFormBuilder({
       const updatedFields = [...currentFields, newField];
       onUpdateField && onUpdateField('fields', updatedFields);
       
-      // Auto-select the new field
+      // Auto-select the new field and open drawer
       onSelectField && onSelectField(newField);
+      setDrawerOpen(true);
     } catch (error) {
       console.error('Error adding field:', String(error));
     }
@@ -186,6 +192,11 @@ export default function EnhancedFormBuilder({
     }
   };
 
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    onSelectField && onSelectField(null);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -223,61 +234,61 @@ export default function EnhancedFormBuilder({
 
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                         <Typography variant="body2" color="text.secondary">
-               {safeFormData.fields?.length || 0} form components
-             </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {safeFormData.fields?.length || 0} form components
+            </Typography>
             <Stack direction="row" spacing={2}>
-                             <Button
-                 variant="outlined"
-                 startIcon={<Preview />}
-                                   onClick={() => {
-                    try {
-                      // Create a temporary form data object for preview
-                      const previewData = {
-                        ...safeFormData,
-                        title: formTitle || safeFormData.title || 'Form Preview',
-                        description: formDescription || safeFormData.description || ''
-                      };
-                      
-                      // Ensure all field data is serializable
-                      const serializableData = {
-                        ...previewData,
-                        fields: (previewData.fields || []).map(field => {
-                          try {
-                            return {
-                              ...field,
-                              // Ensure any complex objects are converted to strings
-                              defaultValue: field.defaultValue ? String(field.defaultValue) : '',
-                              options: Array.isArray(field.options) ? field.options : [],
-                              columns: Array.isArray(field.columns) ? field.columns : [],
-                              steps: Array.isArray(field.steps) ? field.steps : []
-                            };
-                          } catch (fieldError) {
-                            console.warn('Error processing field:', fieldError, field);
-                            // Return a safe fallback field
-                                                         return {
-                               id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
-                               type: field.type || 'text',
-                               label: field.label || 'Field',
-                               required: false
-                             };
-                          }
-                        })
-                      };
-                      
-                      // Store in sessionStorage for preview
-                      sessionStorage.setItem('formPreviewData', JSON.stringify(serializableData));
-                      
-                      // Open preview in new tab
-                      window.open('/form-preview', '_blank');
-                        } catch (error) {
-      console.error('Error preparing preview data:', String(error));
-      alert('Unable to preview form. Please try again.');
-    }
-                  }}
-               >
-                 Preview Form
-               </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Preview />}
+                onClick={() => {
+                  try {
+                    // Create a temporary form data object for preview
+                    const previewData = {
+                      ...safeFormData,
+                      title: formTitle || safeFormData.title || 'Form Preview',
+                      description: formDescription || safeFormData.description || ''
+                    };
+                    
+                    // Ensure all field data is serializable
+                    const serializableData = {
+                      ...previewData,
+                      fields: (previewData.fields || []).map(field => {
+                        try {
+                          return {
+                            ...field,
+                            // Ensure any complex objects are converted to strings
+                            defaultValue: field.defaultValue ? String(field.defaultValue) : '',
+                            options: Array.isArray(field.options) ? field.options : [],
+                            columns: Array.isArray(field.columns) ? field.columns : [],
+                            steps: Array.isArray(field.steps) ? field.steps : []
+                          };
+                        } catch (fieldError) {
+                          console.warn('Error processing field:', fieldError, field);
+                          // Return a safe fallback field
+                          return {
+                            id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
+                            type: field.type || 'text',
+                            label: field.label || 'Field',
+                            required: false
+                          };
+                        }
+                      })
+                    };
+                    
+                    // Store in sessionStorage for preview
+                    sessionStorage.setItem('formPreviewData', JSON.stringify(serializableData));
+                    
+                    // Open preview in new tab
+                    window.open('/form-preview', '_blank');
+                  } catch (error) {
+                    console.error('Error preparing preview data:', String(error));
+                    alert('Unable to preview form. Please try again.');
+                  }
+                }}
+              >
+                Preview Form
+              </Button>
               <Button
                 variant="contained"
                 onClick={handleSave}
@@ -299,19 +310,47 @@ export default function EnhancedFormBuilder({
 
           {/* Center Panel - Form Content */}
           <Paper sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-                         <FormContentPanel
-               formData={safeFormData}
-               selectedField={selectedField}
-               onFieldSelect={handleFieldSelect}
-               onFieldDelete={handleFieldDelete}
-               onFieldMove={handleFieldMove}
-               onFieldReorder={handleFieldReorder}
-               onFieldUpdate={handleFieldUpdate}
-             />
+            <FormContentPanel
+              formData={safeFormData}
+              selectedField={selectedField}
+              onFieldSelect={handleFieldSelect}
+              onFieldDelete={handleFieldDelete}
+              onFieldMove={handleFieldMove}
+              onFieldReorder={handleFieldReorder}
+              onFieldUpdate={handleFieldUpdate}
+            />
           </Paper>
+        </Box>
 
-          {/* Right Panel - Field Properties */}
-          <Paper sx={{ width: 350, p: 2, overflow: 'auto' }}>
+        {/* Field Properties Drawer */}
+        <Drawer
+          anchor="right"
+          open={drawerOpen}
+          onClose={handleCloseDrawer}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: 400,
+              maxWidth: '90vw'
+            }
+          }}
+        >
+          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6" fontWeight={600}>
+                Field Properties
+              </Typography>
+              <IconButton onClick={handleCloseDrawer} size="small">
+                <Close />
+              </IconButton>
+            </Box>
+            {selectedField && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {selectedField.type.charAt(0).toUpperCase() + selectedField.type.slice(1)} Component
+              </Typography>
+            )}
+          </Box>
+          
+          <Box sx={{ p: 2, overflow: 'auto', height: '100%' }}>
             {selectedField ? (
               <FieldPropertiesPanel
                 field={selectedField}
@@ -328,8 +367,8 @@ export default function EnhancedFormBuilder({
                 </Typography>
               </Box>
             )}
-          </Paper>
-        </Box>
+          </Box>
+        </Drawer>
 
         {/* Success/Error Messages */}
         <Snackbar

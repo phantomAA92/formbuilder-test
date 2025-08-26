@@ -518,9 +518,9 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.from({ length: field.rows || 3 }).map((_, rowIndex) => (
+                  {Array.from({ length: field.rows || 3 }).map((rowItem, rowIndex) => (
                     <TableRow key={rowIndex}>
-                      {(field.columns || []).map((_, colIndex) => (
+                      {(field.columns || []).map((colItem, colIndex) => (
                         <TableCell key={colIndex}>
                           <TextField
                             size="small"

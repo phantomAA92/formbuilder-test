@@ -109,15 +109,18 @@ export default function DraggableField({
     onSelect(field);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
     onDelete(field.id);
   };
 
-  const handleMoveUp = () => {
+  const handleMoveUp = (e) => {
+    e.stopPropagation();
     onMove(field.id, 'up');
   };
 
-  const handleMoveDown = () => {
+  const handleMoveDown = (e) => {
+    e.stopPropagation();
     onMove(field.id, 'down');
   };
 
@@ -336,9 +339,9 @@ export default function DraggableField({
                   </Box>
                 ))}
               </Box>
-              {Array.from({ length: Math.min(field.rows || 3, 3) }).map((_, rowIdx) => (
+              {Array.from({ length: Math.min(field.rows || 3, 3) }).map((rowItem, rowIdx) => (
                 <Box key={rowIdx} sx={{ display: 'grid', gridTemplateColumns: `repeat(${(field.columns || ['Column 1', 'Column 2']).length}, 1fr)`, borderTop: '1px solid', borderColor: 'divider' }}>
-                  {(field.columns || ['Column 1', 'Column 2']).map((_, colIdx) => (
+                  {(field.columns || ['Column 1', 'Column 2']).map((colItem, colIdx) => (
                     <Box key={colIdx} sx={{ p: 1, borderRight: colIdx < (field.columns?.length || 2) - 1 ? '1px solid' : 'none', borderColor: 'divider', height: 32 }} />
                   ))}
                 </Box>
