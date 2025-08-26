@@ -1,43 +1,42 @@
 import { z } from 'zod';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import dayjs from 'dayjs';
+import { useRef, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
 
-import { Save, ArrowBack, ArrowForward, Clear } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Save, Clear, ArrowBack, ArrowForward } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
-  Alert,
   Box,
-  Button,
-  CircularProgress,
-  Paper,
-  Stepper,
   Step,
-  StepContent,
-  StepLabel,
-  Typography,
-  TextField,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  RadioGroup,
+  Chip,
+  Alert,
+  Paper,
   Radio,
-  Checkbox,
-  Select,
-  MenuItem,
-  InputLabel,
   Table,
+  Button,
+  Select,
+  Stepper,
+  Checkbox,
+  MenuItem,
+  TableRow,
+  StepLabel,
+  TextField,
+  FormLabel,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
-  TableRow,
-  IconButton,
-  Chip
+  Typography,
+  RadioGroup,
+  InputLabel,
+  StepContent,
+  FormControl,
+  TableContainer,
+  CircularProgress,
+  FormControlLabel
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
 
 export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting = false }) {
   const [activeStep, setActiveStep] = useState(0);

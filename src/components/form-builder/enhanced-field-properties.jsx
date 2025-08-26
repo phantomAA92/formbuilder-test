@@ -1,30 +1,24 @@
 import { useState, useEffect } from 'react';
 
 import {
+  Add,
+  Delete,
+  ExpandMore,
+  DragIndicator
+} from '@mui/icons-material';
+import {
   Box,
-  Typography,
-  TextField,
-  Switch,
-  FormControlLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
   Stack,
-  Divider,
-  Chip,
-  IconButton,
+  Switch,
+  Button,
+  TextField,
   Accordion,
+  Typography,
+  IconButton,
+  FormControlLabel,
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
-import {
-  ExpandMore,
-  Add,
-  Delete,
-  DragIndicator
-} from '@mui/icons-material';
 
 export default function EnhancedFieldProperties({ field, onUpdate }) {
   const [localField, setLocalField] = useState(field);

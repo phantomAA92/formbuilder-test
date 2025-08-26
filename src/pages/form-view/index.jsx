@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 
-import { ArrowBack, Save } from '@mui/icons-material';
-import { Alert, Box, Button, Container, Typography, CircularProgress } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
+import { Box, Alert, Button, Container, Typography, CircularProgress } from '@mui/material';
 
-import EnhancedFormRenderer from '../../components/form-builder/enhanced-form-renderer';
 import FormService, { mockForms } from '../../lib/form-service';
+import EnhancedFormRenderer from '../../components/form-builder/enhanced-form-renderer';
 
 export default function FormViewPage() {
   const { formId } = useParams();
@@ -20,6 +20,7 @@ export default function FormViewPage() {
     if (formId) {
       loadForm();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId]);
 
   const loadForm = async () => {

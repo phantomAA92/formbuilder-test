@@ -3,31 +3,31 @@ import { useDrag, useDrop } from 'react-dnd';
 
 import {
   Box,
-  Paper,
-  Typography,
-  IconButton,
-  Stack,
   Chip,
-  Divider
+  Paper,
+  Stack,
+  Divider,
+  Typography,
+  IconButton
 } from '@mui/material';
 import {
-  Delete,
-  KeyboardArrowUp,
-  KeyboardArrowDown,
-  DragIndicator,
-  TextFields,
-  Subject,
-  RadioButtonChecked,
-  CheckBox,
-  ArrowDropDown,
-  LooksOne,
-  CalendarToday,
-  AttachFile,
   Link,
+  Draw,
+  Delete,
+  Subject,
+  CheckBox,
+  LooksOne,
+  TextFields,
+  AttachFile,
   TableChart,
   Description,
-  Draw,
-  ViewTimeline
+  ViewTimeline,
+  DragIndicator,
+  ArrowDropDown,
+  CalendarToday,
+  KeyboardArrowUp,
+  KeyboardArrowDown,
+  RadioButtonChecked
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -339,8 +339,7 @@ export default function DraggableField({
               {Array.from({ length: Math.min(field.rows || 3, 3) }).map((_, rowIdx) => (
                 <Box key={rowIdx} sx={{ display: 'grid', gridTemplateColumns: `repeat(${(field.columns || ['Column 1', 'Column 2']).length}, 1fr)`, borderTop: '1px solid', borderColor: 'divider' }}>
                   {(field.columns || ['Column 1', 'Column 2']).map((_, colIdx) => (
-                    <Box key={colIdx} sx={{ p: 1, borderRight: colIdx < (field.columns?.length || 2) - 1 ? '1px solid' : 'none', borderColor: 'divider', height: 32 }}>
-                    </Box>
+                    <Box key={colIdx} sx={{ p: 1, borderRight: colIdx < (field.columns?.length || 2) - 1 ? '1px solid' : 'none', borderColor: 'divider', height: 32 }} />
                   ))}
                 </Box>
               ))}
