@@ -551,7 +551,13 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                               const currentData = tableData[field.id] || [];
                               if (!currentData[rowIndex]) currentData[rowIndex] = [];
                               currentData[rowIndex][colIndex] = e.target.value;
+                              // Update both tableData state and main form values
                               handleTableDataChange(field.id, currentData);
+                              // Store a string representation in main form values for validation
+                              const hasData = currentData.some(row => 
+                                Array.isArray(row) && row.some(cell => cell && cell.trim() !== '')
+                              );
+                              handleFieldChange(field.id, hasData ? 'has_data' : '');
                             }}
                             fullWidth
                           />
@@ -562,6 +568,11 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 </TableBody>
               </Table>
             </TableContainer>
+            {errors[field.id] && (
+              <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                {errors[field.id].message}
+              </Typography>
+            )}
           </Box>
         );
 
