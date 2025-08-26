@@ -51,6 +51,25 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             fieldSchema = z.array(z.string()).min(1, 'At least one option must be selected');
           }
           break;
+        case 'attachment':
+          // Handle file uploads - can be File, FileList, or null
+          if (field.required) {
+            fieldSchema = z.any().refine(val => {
+              if (field.multiple) {
+                // Multiple files - check if FileList has files
+                return val && val.length > 0;
+              } else {
+                // Single file - check if File object exists
+                return val && val instanceof File;
+              }
+            }, {
+              message: `${field.label} is required`
+            });
+          } else {
+            // Optional file - can be null, File, or FileList
+            fieldSchema = z.any().nullable();
+          }
+          break;
         default:
           fieldSchema = z.string();
       }

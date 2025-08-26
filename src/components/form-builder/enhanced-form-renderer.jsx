@@ -84,6 +84,25 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             });
           }
           break;
+        case 'attachment':
+          // Handle file uploads - can be File, FileList, or null
+          if (field.required) {
+            fieldSchema = z.any().refine(val => {
+              console.log(`Validating ${field.id}:`, val, 'Type:', typeof val, 'Is File:', val instanceof File, 'Is FileList:', val instanceof FileList, 'Length:', val?.length);
+              // Since onChange always passes FileList, we need to check if it has files
+              if (val && val instanceof FileList) {
+                return val.length > 0;
+              }
+              // Fallback for other cases
+              return val && val !== null && val !== undefined;
+            }, {
+              message: `${field.label} is required`
+            });
+          } else {
+            // Optional file - can be null, File, or FileList
+            fieldSchema = z.any().nullable();
+          }
+          break;
         default:
           fieldSchema = z.string();
       }
