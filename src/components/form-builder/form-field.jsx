@@ -321,6 +321,41 @@ export default function FormField({ field, isPreview = false, value, onChange })
           </Box>
         );
       
+      case 'wizard':
+        return (
+          <Box>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              {field.label}
+            </Typography>
+            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Multi-Step Form Wizard
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {field.steps && field.steps.map((step, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1,
+                      backgroundColor: 'primary.main',
+                      color: 'primary.contrastText',
+                      fontSize: '0.75rem',
+                      fontWeight: 500
+                    }}
+                  >
+                    {step.title}
+                  </Box>
+                ))}
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                {field.steps ? `${field.steps.length} steps configured` : 'No steps configured'}
+              </Typography>
+            </Box>
+          </Box>
+        );
+      
       default:
         return (
           <Typography color="error">

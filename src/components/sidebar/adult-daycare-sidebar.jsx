@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 
 import {
-  Home,
+  AccountCircle,
   Build,
   Close,
   Dashboard,
+  Description,
   ExpandLess,
   ExpandMore,
-  AccountCircle,
+  Home,
+  ListAlt,
   Notifications
 } from '@mui/icons-material';
 import {
@@ -37,12 +39,47 @@ const menuItems = [
     badge: null
   },
   {
-    title: 'Custom Form Builder',
+    title: 'Form Management',
     icon: Build,
-    path: ADULT_DAYCARE_PATHS.customForm,
+    path: null,
     badge: null,
-    description: 'Create dynamic forms'
+    description: 'Create and manage forms',
+    children: [
+      {
+        title: 'Custom Form Builder',
+        icon: Build,
+        path: ADULT_DAYCARE_PATHS.customForm,
+        description: 'Create dynamic forms'
+      },
+      {
+        title: 'Forms Library',
+        icon: ListAlt,
+        path: ADULT_DAYCARE_PATHS.formsList,
+        description: 'View and manage saved forms'
+      }
+    ]
   },
+  {
+    title: 'Reports',
+    icon: Description,
+    path: null,
+    badge: null,
+    description: 'Generate and view reports',
+    children: [
+      {
+        title: 'DMAS 301',
+        icon: Description,
+        path: ADULT_DAYCARE_PATHS.reports.dmas301,
+        description: 'DMAS 301 Report Form'
+      },
+      {
+        title: 'DMAS 302',
+        icon: Description,
+        path: ADULT_DAYCARE_PATHS.reports.dmas302,
+        description: 'DMAS 302 Report Form'
+      }
+    ]
+  }
 ];
 
 export default function AdultDaycareSidebar({ open, onClose, variant }) {

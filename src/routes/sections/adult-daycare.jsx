@@ -14,6 +14,8 @@ import { usePathname } from '../hooks';
 
 const AdultDaycareDashboard = lazy(() => import('src/pages/dashboard/adult-daycare'));
 const CustomFormPage = lazy(() => import('src/pages/custom-form'));
+const FormsListPage = lazy(() => import('src/pages/forms-list'));
+const FormViewPage = lazy(() => import('src/pages/form-view'));
 
 // ----------------------------------------------------------------------
 
@@ -40,6 +42,9 @@ export const adultDaycareRoutes = [
       { element: <AdultDaycareDashboard />, index: true },
       { path: 'dashboard', element: <AdultDaycareDashboard /> },
       { path: 'custom-form', element: <CustomFormPage /> },
+      { path: 'custom-form/:formId', element: <CustomFormPage /> },
+      { path: 'forms-list', element: <FormsListPage /> },
+      { path: 'form-view/:formId', element: <FormViewPage /> },
     ],
   },
 ]; 

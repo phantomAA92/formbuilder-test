@@ -200,6 +200,53 @@ export default function FieldProperties({ field, onUpdate }) {
           />
         );
 
+      case 'wizard':
+        return (
+          <Stack spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2">Steps:</Typography>
+              <Button
+                size="small"
+                startIcon={<Add />}
+                onClick={() => {
+                  const updatedSteps = [...(properties.steps || []), { title: `Step ${(properties.steps || []).length + 1}`, fields: [] }];
+                  handlePropertyChange('steps', updatedSteps);
+                }}
+              >
+                Add Step
+              </Button>
+            </Box>
+            <Stack spacing={1}>
+              {(properties.steps || []).map((step, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    value={step.title}
+                    onChange={(e) => {
+                      const updatedSteps = [...(properties.steps || [])];
+                      updatedSteps[index] = { ...updatedSteps[index], title: e.target.value };
+                      handlePropertyChange('steps', updatedSteps);
+                    }}
+                    sx={{ flex: 1 }}
+                    placeholder="Step title"
+                  />
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<Delete />}
+                    onClick={() => {
+                      const updatedSteps = properties.steps.filter((_, i) => i !== index);
+                      handlePropertyChange('steps', updatedSteps);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              ))}
+            </Stack>
+          </Stack>
+        );
+
       default:
         return null;
     }

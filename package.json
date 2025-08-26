@@ -50,6 +50,8 @@
     "minimal-shared": "^1.0.15",
     "nprogress": "^0.2.0",
     "react": "^19.1.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
     "react-router": "^7.6.2",

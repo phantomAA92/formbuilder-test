@@ -1,19 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router';
 
-import { Box, Paper, Container, Typography } from '@mui/material';
+import { ArrowBack, Save } from '@mui/icons-material';
+import { Alert, Box, Button, Container, Paper, Typography } from '@mui/material';
 
 import { FormBuilder } from '../../components/form-builder';
-import FormPreview from '../../components/form-builder/form-preview';
 import FormComponentsPanel from '../../components/form-builder/form-components-panel';
+import FormPreview from '../../components/form-builder/form-preview';
+import FormService, { mockForms } from '../../lib/form-service';
 
 export default function CustomFormPage() {
+  const { formId } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: 'New Form',
     description: '',
     fields: []
   });
-
   const [selectedField, setSelectedField] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (formId) {
+      loadExistingForm();
+    }
+  }, [formId]);
+
+  const loadExistingForm = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      let form;
+      if (process.env.NODE_ENV === 'development') {
+        form = mockForms.find(f => f.id === formId);
+        if (!form) {
+          throw new Error('Form not found');
+        }
+      } else {
+        form = await FormService.getFormById(formId);
+      }
+      
+      setFormData(form);
+      setIsEditing(true);
+    } catch (loadError) {
+      console.error('Error loading form:', loadError);
+      setError('Failed to load form. Creating new form instead.');
+      setIsEditing(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddField = (type, defaultData) => {
     const newField = {
@@ -28,12 +67,24 @@ export default function CustomFormPage() {
   };
 
   const handleUpdateField = (fieldId, updates) => {
-    setFormData(prev => ({
-      ...prev,
-      fields: prev.fields.map(field => 
-        field.id === fieldId ? { ...field, ...updates } : field
-      )
-    }));
+    if (fieldId === 'title' || fieldId === 'description') {
+      setFormData(prev => ({
+        ...prev,
+        [fieldId]: updates
+      }));
+    } else if (fieldId === 'fields') {
+      setFormData(prev => ({
+        ...prev,
+        fields: updates
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        fields: prev.fields.map(field => 
+          field.id === fieldId ? { ...field, ...updates } : field
+        )
+      }));
+    }
   };
 
   const handleDeleteField = (fieldId) => {
@@ -61,16 +112,100 @@ export default function CustomFormPage() {
     });
   };
 
-  const handleSaveForm = () => {
-    console.log('Form saved:', formData);
-    // Here you would typically save to backend
+  const handleSaveForm = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!formData.title.trim()) {
+        setError('Form title is required');
+        return;
+      }
+      
+      if (formData.fields.length === 0) {
+        setError('Form must have at least one field');
+        return;
+      }
+      
+      let savedForm;
+      if (isEditing) {
+        if (process.env.NODE_ENV !== 'development') {
+          savedForm = await FormService.updateForm(formId, formData);
+        } else {
+          savedForm = { ...formData, id: formId };
+        }
+      } else {
+        if (process.env.NODE_ENV !== 'development') {
+          savedForm = await FormService.saveForm(formData);
+        } else {
+          savedForm = { ...formData, id: Date.now().toString() };
+        }
+      }
+      
+      console.log('Form saved:', savedForm);
+      
+      // Redirect to forms list or show success message
+      if (!isEditing) {
+        navigate('/forms-list');
+      } else {
+        setError('Form updated successfully!');
+        setTimeout(() => setError(null), 3000);
+      }
+      
+          } catch (saveError) {
+        console.error('Error saving form:', saveError);
+        setError('Failed to save form. Please try again.');
+      } finally {
+        setLoading(false);
+      }
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <Typography>Loading form...</Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Typography variant="h3" sx={{ mb: 3 }}>
-        Custom Form Builder
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h3">
+          {isEditing ? 'Edit Form' : 'Custom Form Builder'}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBack />}
+            onClick={() => navigate('/forms-list')}
+          >
+            Back to Forms
+          </Button>
+          
+          <Button
+            variant="contained"
+            startIcon={<Save />}
+            onClick={handleSaveForm}
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : (isEditing ? 'Update Form' : 'Save Form')}
+          </Button>
+        </Box>
+      </Box>
+      
+      {error && (
+        <Alert 
+          severity={error.includes('successfully') ? 'success' : 'error'} 
+          sx={{ mb: 3 }}
+          onClose={() => setError(null)}
+        >
+          {error}
+        </Alert>
+      )}
       
       <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 200px)' }}>
         {/* Left Panel - Form Components */}

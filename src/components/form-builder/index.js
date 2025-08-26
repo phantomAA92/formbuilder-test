@@ -1,8 +1,7 @@
-// Default export for backward compatibility
-export { default } from './index.jsx';
-export { default as FormBuilder } from './index.jsx';
-export { default as FormField } from './form-field.jsx';
-export { default as FormPreview } from './form-preview.jsx';
-export { default as FieldProperties } from './field-properties.jsx';
-
-export { default as FormComponentsPanel } from './form-components-panel.jsx'; 
+export { default as FormBuilder } from './enhanced-form-builder';
+export { default as FormField } from './form-field';
+export { default as FieldProperties } from './field-properties';
+export { default as FormComponentsPanel } from './form-components-panel';
+export { default as FormRenderer } from './form-renderer';
+export { default as FormsList } from './forms-list';
+export { default as FormPreview } from './form-preview'; 
