@@ -1,7 +1,11 @@
-export { default as FormBuilder } from './enhanced-form-builder';
-export { default as FormField } from './form-field';
-export { default as FieldProperties } from './field-properties';
+export { default as EnhancedFormBuilder } from './enhanced-form-builder';
 export { default as FormComponentsPanel } from './form-components-panel';
-export { default as FormRenderer } from './form-renderer';
+export { default as FormContentPanel } from './form-content-panel';
+export { default as EnhancedFieldProperties } from './enhanced-field-properties';
+export { default as DraggableField } from './draggable-field';
+export { default as EnhancedFormRenderer } from './enhanced-form-renderer';
 export { default as FormsList } from './forms-list';
-export { default as FormPreview } from './form-preview'; 
+export { default as FormPreview } from './form-preview';
+export { default as FormField } from './form-field';
+export { default as FormRenderer } from './form-renderer';
+export { default as FieldProperties } from './field-properties'; 

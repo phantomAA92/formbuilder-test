@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
 import { DndProvider } from 'react-dnd';
+import { useState, useCallback, useMemo } from 'react';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import {
   Preview,
-  Save
+  Save,
+  Settings
 } from '@mui/icons-material';
 import {
   Alert,
@@ -14,11 +15,13 @@ import {
   Snackbar,
   Stack,
   TextField,
-  Typography
+  Typography,
+  Divider
 } from '@mui/material';
 
-import DraggableField from './draggable-field';
-import FieldProperties from './field-properties';
+import FormContentPanel from './form-content-panel';
+import FormComponentsPanel from './form-components-panel';
+import FieldPropertiesPanel from './enhanced-field-properties';
 
 export default function EnhancedFormBuilder({
   formData,
@@ -29,9 +32,19 @@ export default function EnhancedFormBuilder({
   selectedField,
   onSave
 }) {
-  const [formTitle, setFormTitle] = useState(formData.title || '');
-  const [formDescription, setFormDescription] = useState(formData.description || '');
+  // Ensure formData has a valid structure - use useMemo to prevent recreation on every render
+  const safeFormData = useMemo(() => ({
+    title: '',
+    description: '',
+    fields: [],
+    ...formData
+  }), [formData]);
+  
+  const [formTitle, setFormTitle] = useState(formData?.title || '');
+  const [formDescription, setFormDescription] = useState(formData?.description || '');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleTitleChange = (value) => {
     setFormTitle(value);
@@ -58,160 +71,267 @@ export default function EnhancedFormBuilder({
     onMoveField && onMoveField(fieldId, direction);
   };
 
-  const handleSave = async () => {
+  const handleAddField = (type, defaultData) => {
     try {
-      await onSave && onSave();
-      setShowSuccess(true);
+      if (!type || typeof type !== 'string') {
+        console.error('Invalid field type:', String(type));
+        return;
+      }
+      
+      const newField = {
+        id: `field_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        type,
+        label: defaultData?.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
+        required: false,
+        ...defaultData
+      };
+      
+      const currentFields = safeFormData.fields || [];
+      if (!Array.isArray(currentFields)) {
+        console.error('Fields is not an array:', typeof currentFields);
+        return;
+      }
+      
+      const updatedFields = [...currentFields, newField];
+      onUpdateField && onUpdateField('fields', updatedFields);
+      
+      // Auto-select the new field
+      onSelectField && onSelectField(newField);
     } catch (error) {
-      console.error('Error saving form:', error);
+      console.error('Error adding field:', String(error));
     }
   };
 
-  const handleDrop = useCallback((item, monitor) => {
-    if (monitor.didDrop()) {
-      return;
-    }
-    
-    const { type, defaultData } = item;
-    const newField = {
-      id: Date.now().toString(),
-      type,
-      ...defaultData
-    };
-    
-    onUpdateField && onUpdateField('fields', [...(formData.fields || []), newField]);
-  }, [formData.fields, onUpdateField]);
-
   const handleFieldReorder = useCallback((dragIndex, hoverIndex) => {
-    const fields = [...(formData.fields || [])];
-    const draggedField = fields[dragIndex];
-    
-    fields.splice(dragIndex, 1);
-    fields.splice(hoverIndex, 0, draggedField);
-    
-    onUpdateField && onUpdateField('fields', fields);
-  }, [formData.fields, onUpdateField]);
+    try {
+      const currentFields = safeFormData.fields || [];
+      if (!Array.isArray(currentFields)) {
+        console.error('Fields is not an array:', typeof currentFields);
+        return;
+      }
+      
+      if (dragIndex < 0 || dragIndex >= currentFields.length || 
+          hoverIndex < 0 || hoverIndex >= currentFields.length) {
+        console.error('Invalid drag or hover index:', 
+          `dragIndex: ${dragIndex}, hoverIndex: ${hoverIndex}, length: ${currentFields.length}`);
+        return;
+      }
+      
+      const fields = [...currentFields];
+      const draggedField = fields[dragIndex];
+      
+      fields.splice(dragIndex, 1);
+      fields.splice(hoverIndex, 0, draggedField);
+      
+      onUpdateField && onUpdateField('fields', fields);
+    } catch (error) {
+      console.error('Error reordering fields:', String(error));
+    }
+  }, [safeFormData.fields, onUpdateField]);
+
+  const handleFieldUpdate = (fieldId, updates) => {
+    try {
+      if (!fieldId) {
+        console.error('Field ID is required');
+        return;
+      }
+      
+      if (fieldId === 'title' || fieldId === 'description') {
+        onUpdateField && onUpdateField(fieldId, updates);
+      } else if (fieldId === 'fields') {
+        // Ensure fields is an array
+        const fieldsArray = Array.isArray(updates) ? updates : [];
+        onUpdateField && onUpdateField('fields', fieldsArray);
+      } else {
+        const currentFields = safeFormData.fields || [];
+        if (!Array.isArray(currentFields)) {
+          console.error('Fields is not an array:', typeof currentFields);
+          return;
+        }
+        
+        const updatedFields = currentFields.map(field => 
+          field.id === fieldId ? { ...field, ...updates } : field
+        );
+        onUpdateField && onUpdateField('fields', updatedFields);
+      }
+    } catch (error) {
+      console.error('Error updating field:', String(error));
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      if (!formTitle || !formTitle.trim()) {
+        setErrorMessage('Form title is required');
+        setShowError(true);
+        return;
+      }
+      
+      const currentFields = safeFormData.fields || [];
+      if (!Array.isArray(currentFields) || currentFields.length === 0) {
+        setErrorMessage('Form must have at least one field');
+        setShowError(true);
+        return;
+      }
+      
+      if (onSave) {
+        await onSave();
+        setShowSuccess(true);
+        setShowError(false);
+      }
+    } catch (error) {
+      console.error('Error saving form:', String(error));
+      setErrorMessage('Failed to save form. Please try again.');
+      setShowError(true);
+    }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Box>
-        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-          Form Builder
-        </Typography>
-        
-        {/* Form Title & Description */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Form Details
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
+            Custom Form Builder
           </Typography>
-          <Stack spacing={2}>
-            <TextField
-              label="Form Title"
-              value={formTitle}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Form Description"
-              value={formDescription}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              fullWidth
-              multiline
-              rows={2}
-              placeholder="Describe the purpose of this form..."
-            />
-          </Stack>
-        </Paper>
-
-        {/* Fields List */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
-              Form Fields ({formData.fields?.length || 0})
+          
+          {/* Form Title & Description */}
+          <Paper sx={{ p: 3, mb: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Form Details
             </Typography>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                startIcon={<Preview />}
-                onClick={() => window.open('/form-preview', '_blank')}
-              >
-                Preview
-              </Button>
+            <Stack spacing={2}>
+              <TextField
+                label="Form Title"
+                value={formTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                fullWidth
+                required
+                placeholder="Enter form title..."
+              />
+              <TextField
+                label="Form Description"
+                value={formDescription}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
+                fullWidth
+                multiline
+                rows={2}
+                placeholder="Describe the purpose of this form..."
+              />
+            </Stack>
+          </Paper>
+
+          {/* Action Buttons */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                         <Typography variant="body2" color="text.secondary">
+               {safeFormData.fields?.length || 0} form components
+             </Typography>
+            <Stack direction="row" spacing={2}>
+                             <Button
+                 variant="outlined"
+                 startIcon={<Preview />}
+                                   onClick={() => {
+                    try {
+                      // Create a temporary form data object for preview
+                      const previewData = {
+                        ...safeFormData,
+                        title: formTitle || safeFormData.title || 'Form Preview',
+                        description: formDescription || safeFormData.description || ''
+                      };
+                      
+                      // Ensure all field data is serializable
+                      const serializableData = {
+                        ...previewData,
+                        fields: (previewData.fields || []).map(field => {
+                          try {
+                            return {
+                              ...field,
+                              // Ensure any complex objects are converted to strings
+                              defaultValue: field.defaultValue ? String(field.defaultValue) : '',
+                              options: Array.isArray(field.options) ? field.options : [],
+                              columns: Array.isArray(field.columns) ? field.columns : [],
+                              steps: Array.isArray(field.steps) ? field.steps : []
+                            };
+                          } catch (fieldError) {
+                            console.warn('Error processing field:', fieldError, field);
+                            // Return a safe fallback field
+                                                         return {
+                               id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
+                               type: field.type || 'text',
+                               label: field.label || 'Field',
+                               required: false
+                             };
+                          }
+                        })
+                      };
+                      
+                      // Store in sessionStorage for preview
+                      sessionStorage.setItem('formPreviewData', JSON.stringify(serializableData));
+                      
+                      // Open preview in new tab
+                      window.open('/form-preview', '_blank');
+                        } catch (error) {
+      console.error('Error preparing preview data:', String(error));
+      alert('Unable to preview form. Please try again.');
+    }
+                  }}
+               >
+                 Preview Form
+               </Button>
               <Button
                 variant="contained"
                 onClick={handleSave}
                 startIcon={<Save />}
+                size="large"
               >
                 Save Form
               </Button>
             </Stack>
           </Box>
+        </Box>
 
-          {formData.fields && formData.fields.length > 0 ? (
-            <Stack spacing={2}>
-              {formData.fields.map((field, index) => (
-                <DraggableField
-                  key={field.id}
-                  field={field}
-                  index={index}
-                  isSelected={selectedField?.id === field.id}
-                  onSelect={() => handleFieldSelect(field)}
-                  onDelete={() => handleFieldDelete(field.id)}
-                  onMove={handleFieldMove}
-                  onReorder={handleFieldReorder}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < formData.fields.length - 1}
-                />
-              ))}
-            </Stack>
-          ) : (
-            <Box 
-              sx={{ 
-                textAlign: 'center', 
-                py: 8,
-                border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 2,
-                backgroundColor: 'action.hover'
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const data = e.dataTransfer.getData('text/plain');
-                try {
-                  const item = JSON.parse(data);
-                  handleDrop(item, { didDrop: () => false });
-                } catch (error) {
-                  console.error('Error parsing drop data:', error);
-                }
-              }}
-              onDragOver={(e) => e.preventDefault()}
-            >
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-                Drop form components here
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Or use the left panel to add components
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-
-        {/* Field Properties Panel */}
-        {selectedField && (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Field Properties: {selectedField.label || selectedField.type}
-            </Typography>
-            <FieldProperties
-              field={selectedField}
-              onUpdate={(updates) => {
-                onUpdateField && onUpdateField(selectedField.id, updates);
-              }}
-            />
+        {/* Main Builder Area */}
+        <Box sx={{ flex: 1, display: 'flex', gap: 2, minHeight: 0 }}>
+          {/* Left Panel - Form Components */}
+          <Paper sx={{ width: 320, p: 2, overflow: 'auto' }}>
+            <FormComponentsPanel onAddField={handleAddField} />
           </Paper>
-        )}
 
+          {/* Center Panel - Form Content */}
+          <Paper sx={{ flex: 1, p: 2, overflow: 'auto' }}>
+                         <FormContentPanel
+               formData={safeFormData}
+               selectedField={selectedField}
+               onFieldSelect={handleFieldSelect}
+               onFieldDelete={handleFieldDelete}
+               onFieldMove={handleFieldMove}
+               onFieldReorder={handleFieldReorder}
+               onFieldUpdate={handleFieldUpdate}
+             />
+          </Paper>
+
+          {/* Right Panel - Field Properties */}
+          <Paper sx={{ width: 350, p: 2, overflow: 'auto' }}>
+            {selectedField ? (
+              <FieldPropertiesPanel
+                field={selectedField}
+                onUpdate={(updates) => handleFieldUpdate(selectedField.id, updates)}
+              />
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Settings sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  Field Properties
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Select a field to edit its properties
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Box>
+
+        {/* Success/Error Messages */}
         <Snackbar
           open={showSuccess}
           autoHideDuration={3000}
@@ -219,6 +339,16 @@ export default function EnhancedFormBuilder({
         >
           <Alert onClose={() => setShowSuccess(false)} severity="success">
             Form saved successfully!
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={showError}
+          autoHideDuration={5000}
+          onClose={() => setShowError(false)}
+        >
+          <Alert onClose={() => setShowError(false)} severity="error">
+            {errorMessage}
           </Alert>
         </Snackbar>
       </Box>

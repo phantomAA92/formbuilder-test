@@ -45,7 +45,7 @@ function useProgressBar() {
           NProgress.start();
         }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.MODE === 'development') {
           console.error('Navigation progress error:', error);
         }
         NProgress.done();

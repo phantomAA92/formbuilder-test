@@ -16,6 +16,7 @@ const AdultDaycareDashboard = lazy(() => import('src/pages/dashboard/adult-dayca
 const CustomFormPage = lazy(() => import('src/pages/custom-form'));
 const FormsListPage = lazy(() => import('src/pages/forms-list'));
 const FormViewPage = lazy(() => import('src/pages/form-view'));
+const FormPreviewPage = lazy(() => import('src/pages/form-preview'));
 
 // ----------------------------------------------------------------------
 
@@ -45,6 +46,7 @@ export const adultDaycareRoutes = [
       { path: 'custom-form/:formId', element: <CustomFormPage /> },
       { path: 'forms-list', element: <FormsListPage /> },
       { path: 'form-view/:formId', element: <FormViewPage /> },
+      { path: 'form-preview', element: <FormPreviewPage /> },
     ],
   },
 ]; 

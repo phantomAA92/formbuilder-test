@@ -1,514 +1,667 @@
 import { useState, useEffect } from 'react';
 
-import { Add, Delete, DragIndicator, ExpandMore } from '@mui/icons-material';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
-  Button,
-  Chip,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
+  Typography,
   TextField,
-  Typography
+  Switch,
+  FormControlLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Stack,
+  Divider,
+  Chip,
+  IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
+import {
+  ExpandMore,
+  Add,
+  Delete,
+  DragIndicator
+} from '@mui/icons-material';
 
 export default function EnhancedFieldProperties({ field, onUpdate }) {
-  const [properties, setProperties] = useState(field);
+  const [localField, setLocalField] = useState(field);
 
   useEffect(() => {
-    setProperties(field);
+    setLocalField(field);
   }, [field]);
 
-  const handlePropertyChange = (key, value) => {
-    const updatedProperties = { ...properties, [key]: value };
-    setProperties(updatedProperties);
-    onUpdate && onUpdate(updatedProperties);
-  };
-
-  const handleOptionAdd = () => {
-    const updatedOptions = [...(properties.options || []), 'New Option'];
-    handlePropertyChange('options', updatedOptions);
-  };
-
-  const handleOptionDelete = (index) => {
-    const updatedOptions = properties.options.filter((_, i) => i !== index);
-    handlePropertyChange('options', updatedOptions);
+  const handleChange = (property, value) => {
+    const updatedField = { ...localField, [property]: value };
+    setLocalField(updatedField);
+    onUpdate(updatedField);
   };
 
   const handleOptionChange = (index, value) => {
-    const updatedOptions = [...(properties.options || [])];
-    updatedOptions[index] = value;
-    handlePropertyChange('options', updatedOptions);
+    const options = [...(localField.options || [])];
+    options[index] = value;
+    handleChange('options', options);
   };
 
-  const handleWizardStepAdd = () => {
-    const newStep = { title: `Step ${(properties.steps?.length || 0) + 1}`, fields: [] };
-    const updatedSteps = [...(properties.steps || []), newStep];
-    handlePropertyChange('steps', updatedSteps);
+  const addOption = () => {
+    const options = [...(localField.options || []), `Option ${(localField.options?.length || 0) + 1}`];
+    handleChange('options', options);
   };
 
-  const handleWizardStepDelete = (index) => {
-    const updatedSteps = properties.steps.filter((_, i) => i !== index);
-    handlePropertyChange('steps', updatedSteps);
+  const removeOption = (index) => {
+    const options = (localField.options || []).filter((_, i) => i !== index);
+    handleChange('options', options);
   };
 
-  const handleWizardStepChange = (index, key, value) => {
-    const updatedSteps = [...(properties.steps || [])];
-    updatedSteps[index] = { ...updatedSteps[index], [key]: value };
-    handlePropertyChange('steps', updatedSteps);
+  const handleTableColumnChange = (index, value) => {
+    const columns = [...(localField.columns || [])];
+    columns[index] = value;
+    handleChange('columns', columns);
   };
 
-  const renderBasicProperties = () => (
-    <Stack spacing={2}>
-      <TextField
-        label="Field Label"
-        value={properties.label || ''}
-        onChange={(e) => handlePropertyChange('label', e.target.value)}
-        fullWidth
-        size="small"
-        required
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={properties.required || false}
-            onChange={(e) => handlePropertyChange('required', e.target.checked)}
-          />
-        }
-        label="Required Field"
-      />
-      {properties.helpText && (
-        <TextField
-          label="Help Text"
-          value={properties.helpText || ''}
-          onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-          fullWidth
-          size="small"
-          multiline
-          rows={2}
-        />
-      )}
-    </Stack>
+  const addTableColumn = () => {
+    const columns = [...(localField.columns || []), `Column ${(localField.columns?.length || 0) + 1}`];
+    handleChange('columns', columns);
+  };
+
+  const removeTableColumn = (index) => {
+    const columns = (localField.columns || []).filter((_, i) => i !== index);
+    handleChange('columns', columns);
+  };
+
+  const handleWizardStepChange = (stepIndex, property, value) => {
+    const steps = [...(localField.steps || [])];
+    steps[stepIndex] = { ...steps[stepIndex], [property]: value };
+    handleChange('steps', steps);
+  };
+
+  const addWizardStep = () => {
+    const steps = [...(localField.steps || []), { title: `Step ${(localField.steps?.length || 0) + 1}`, fields: [] }];
+    handleChange('steps', steps);
+  };
+
+  const removeWizardStep = (stepIndex) => {
+    const steps = (localField.steps || []).filter((_, i) => i !== stepIndex);
+    handleChange('steps', steps);
+  };
+
+  if (!field) return null;
+
+  return (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        Field Properties
+      </Typography>
+      
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {field.type.charAt(0).toUpperCase() + field.type.slice(1)} Component
+      </Typography>
+
+      <Stack spacing={3}>
+        {/* Basic Properties */}
+        <Accordion defaultExpanded>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1" fontWeight={500}>Basic Properties</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <TextField
+                label="Field Label"
+                value={localField.label || ''}
+                onChange={(e) => handleChange('label', e.target.value)}
+                fullWidth
+                size="small"
+              />
+              
+              <TextField
+                label="Field ID"
+                value={localField.id || ''}
+                onChange={(e) => handleChange('id', e.target.value)}
+                fullWidth
+                size="small"
+                helperText="Unique identifier for this field"
+              />
+
+              <TextField
+                label="Placeholder"
+                value={localField.placeholder || ''}
+                onChange={(e) => handleChange('placeholder', e.target.value)}
+                fullWidth
+                size="small"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={localField.required || false}
+                    onChange={(e) => handleChange('required', e.target.checked)}
+                  />
+                }
+                label="Required Field"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={localField.disabled || false}
+                    onChange={(e) => handleChange('disabled', e.target.checked)}
+                  />
+                }
+                label="Disabled"
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Type-Specific Properties */}
+        {renderTypeSpecificProperties()}
+
+        {/* Validation Properties */}
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1" fontWeight={500}>Validation</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <TextField
+                label="Min Length"
+                type="number"
+                value={localField.minLength || ''}
+                onChange={(e) => handleChange('minLength', parseInt(e.target.value) || undefined)}
+                fullWidth
+                size="small"
+              />
+              
+              <TextField
+                label="Max Length"
+                type="number"
+                value={localField.maxLength || ''}
+                onChange={(e) => handleChange('maxLength', parseInt(e.target.value) || undefined)}
+                fullWidth
+                size="small"
+              />
+
+              <TextField
+                label="Pattern (Regex)"
+                value={localField.pattern || ''}
+                onChange={(e) => handleChange('pattern', e.target.value)}
+                fullWidth
+                size="small"
+                helperText="Regular expression for validation"
+              />
+
+              <TextField
+                label="Error Message"
+                value={localField.errorMessage || ''}
+                onChange={(e) => handleChange('errorMessage', e.target.value)}
+                fullWidth
+                size="small"
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Styling Properties */}
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1" fontWeight={500}>Styling</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <TextField
+                label="CSS Class"
+                value={localField.className || ''}
+                onChange={(e) => handleChange('className', e.target.value)}
+                fullWidth
+                size="small"
+              />
+              
+              <TextField
+                label="Width"
+                value={localField.width || ''}
+                onChange={(e) => handleChange('width', e.target.value)}
+                fullWidth
+                size="small"
+                placeholder="e.g., 100%, 200px"
+              />
+
+              <TextField
+                label="Height"
+                value={localField.height || ''}
+                onChange={(e) => handleChange('height', e.target.value)}
+                fullWidth
+                size="small"
+                placeholder="e.g., 40px, 100px"
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      </Stack>
+    </Box>
   );
 
-  const renderFieldSpecificProperties = () => {
+  function renderTypeSpecificProperties() {
     switch (field.type) {
       case 'text':
       case 'textarea':
         return (
-          <Stack spacing={2}>
-            <TextField
-              label="Placeholder Text"
-              value={properties.placeholder || ''}
-              onChange={(e) => handlePropertyChange('placeholder', e.target.value)}
-              fullWidth
-              size="small"
-            />
-            {field.type === 'textarea' && (
-              <TextField
-                label="Number of Rows"
-                type="number"
-                value={properties.rows || 4}
-                onChange={(e) => handlePropertyChange('rows', parseInt(e.target.value))}
-                fullWidth
-                size="small"
-                inputProps={{ min: 1, max: 20 }}
-              />
-            )}
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Text Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                {field.type === 'textarea' && (
+                  <TextField
+                    label="Rows"
+                    type="number"
+                    value={localField.rows || 4}
+                    onChange={(e) => handleChange('rows', parseInt(e.target.value) || 4)}
+                    fullWidth
+                    size="small"
+                    inputProps={{ min: 1, max: 20 }}
+                  />
+                )}
+                
+                <TextField
+                  label="Default Value"
+                  value={localField.defaultValue || ''}
+                  onChange={(e) => handleChange('defaultValue', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'number':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Number Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Minimum Value"
+                  type="number"
+                  value={localField.min || ''}
+                  onChange={(e) => handleChange('min', parseFloat(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                />
+                
+                <TextField
+                  label="Maximum Value"
+                  type="number"
+                  value={localField.max || ''}
+                  onChange={(e) => handleChange('max', parseFloat(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                />
+                
+                <TextField
+                  label="Step"
+                  type="number"
+                  value={localField.step || ''}
+                  onChange={(e) => handleChange('step', parseFloat(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                  placeholder="e.g., 0.1, 1"
+                />
+                
+                <TextField
+                  label="Default Value"
+                  type="number"
+                  value={localField.defaultValue || ''}
+                  onChange={(e) => handleChange('defaultValue', parseFloat(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'date':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Date Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Min Date"
+                  type="date"
+                  value={localField.minDate || ''}
+                  onChange={(e) => handleChange('minDate', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                
+                <TextField
+                  label="Max Date"
+                  type="date"
+                  value={localField.maxDate || ''}
+                  onChange={(e) => handleChange('maxDate', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                
+                <TextField
+                  label="Default Date"
+                  type="date"
+                  value={localField.defaultValue || ''}
+                  onChange={(e) => handleChange('defaultValue', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         );
 
       case 'radio':
       case 'checkbox':
       case 'dropdown':
         return (
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2">Options:</Typography>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                onClick={handleOptionAdd}
-              >
-                Add Option
-              </Button>
-            </Box>
-            <Stack spacing={1}>
-              {(properties.options || []).map((option, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TextField
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Options</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle2">Options</Typography>
+                  <Button
+                    startIcon={<Add />}
+                    onClick={addOption}
                     size="small"
-                    value={option}
-                    onChange={(e) => handleOptionChange(index, e.target.value)}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleOptionDelete(index)}
+                    variant="outlined"
                   >
-                    <Delete />
-                  </IconButton>
+                    Add Option
+                  </Button>
                 </Box>
-              ))}
-            </Stack>
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
-        );
-
-      case 'number':
-        return (
-          <Stack spacing={2}>
-            <TextField
-              label="Placeholder Text"
-              value={properties.placeholder || ''}
-              onChange={(e) => handlePropertyChange('placeholder', e.target.value)}
-              fullWidth
-              size="small"
-            />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Minimum Value"
-                type="number"
-                value={properties.min || 0}
-                onChange={(e) => handlePropertyChange('min', parseInt(e.target.value))}
-                size="small"
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="Maximum Value"
-                type="number"
-                value={properties.max || 999999}
-                onChange={(e) => handlePropertyChange('max', parseInt(e.target.value))}
-                size="small"
-                sx={{ flex: 1 }}
-              />
-            </Box>
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
-        );
-
-      case 'date':
-        return (
-          <Stack spacing={2}>
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
+                
+                <Stack spacing={1}>
+                  {(localField.options || []).map((option, index) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <DragIndicator sx={{ color: 'text.secondary' }} />
+                      <TextField
+                        value={option}
+                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                        size="small"
+                        sx={{ flex: 1 }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => removeOption(index)}
+                        color="error"
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Stack>
+                
+                {field.type === 'dropdown' && (
+                  <TextField
+                    label="Default Selected Option"
+                    value={localField.defaultValue || ''}
+                    onChange={(e) => handleChange('defaultValue', e.target.value)}
+                    fullWidth
+                    size="small"
+                  />
+                )}
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         );
 
       case 'attachment':
         return (
-          <Stack spacing={2}>
-            <TextField
-              label="Accepted File Types"
-              value={properties.accept || '.pdf,.doc,.docx,.jpg,.png'}
-              onChange={(e) => handlePropertyChange('accept', e.target.value)}
-              fullWidth
-              size="small"
-              placeholder=".pdf,.doc,.docx,.jpg,.png"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={properties.multiple || false}
-                  onChange={(e) => handlePropertyChange('multiple', e.target.checked)}
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>File Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Accepted File Types"
+                  value={localField.accept || ''}
+                  onChange={(e) => handleChange('accept', e.target.value)}
+                  fullWidth
+                  size="small"
+                  placeholder=".pdf,.doc,.docx,.jpg,.png"
                 />
-              }
-              label="Allow Multiple Files"
-            />
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
-        );
-
-      case 'link':
-        return (
-          <Stack spacing={2}>
-            <TextField
-              label="Placeholder Text"
-              value={properties.placeholder || ''}
-              onChange={(e) => handlePropertyChange('placeholder', e.target.value)}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
+                
+                <TextField
+                  label="Max File Size (MB)"
+                  type="number"
+                  value={localField.maxSize || ''}
+                  onChange={(e) => handleChange('maxSize', parseInt(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                />
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={localField.multiple || false}
+                      onChange={(e) => handleChange('multiple', e.target.checked)}
+                    />
+                  }
+                  label="Allow Multiple Files"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         );
 
       case 'table':
         return (
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2">Columns:</Typography>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                onClick={() => {
-                  const newColumns = [...(properties.columns || []), `Column ${(properties.columns?.length || 0) + 1}`];
-                  handlePropertyChange('columns', newColumns);
-                }}
-              >
-                Add Column
-              </Button>
-            </Box>
-            <Stack spacing={1}>
-              {(properties.columns || []).map((column, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TextField
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Table Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle2">Columns</Typography>
+                  <Button
+                    startIcon={<Add />}
+                    onClick={addTableColumn}
                     size="small"
-                    value={column}
-                    onChange={(e) => {
-                      const newColumns = [...(properties.columns || [])];
-                      newColumns[index] = e.target.value;
-                      handlePropertyChange('columns', newColumns);
-                    }}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => {
-                      const newColumns = properties.columns.filter((_, i) => i !== index);
-                      handlePropertyChange('columns', newColumns);
-                    }}
+                    variant="outlined"
                   >
-                    <Delete />
-                  </IconButton>
+                    Add Column
+                  </Button>
                 </Box>
-              ))}
-            </Stack>
-            <TextField
-              label="Number of Rows"
-              type="number"
-              value={properties.rows || 3}
-              onChange={(e) => handlePropertyChange('rows', parseInt(e.target.value))}
-              fullWidth
-              size="small"
-              inputProps={{ min: 1, max: 20 }}
-            />
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
-        );
-
-      case 'richtext':
-        return (
-          <Stack spacing={2}>
-            <TextField
-              label="Placeholder Text"
-              value={properties.placeholder || ''}
-              onChange={(e) => handlePropertyChange('placeholder', e.target.value)}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
-        );
-
-      case 'signature':
-        return (
-          <Stack spacing={2}>
-            <TextField
-              label="Help Text"
-              value={properties.helpText || ''}
-              onChange={(e) => handlePropertyChange('helpText', e.target.value)}
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Stack>
+                
+                <Stack spacing={1}>
+                  {(localField.columns || []).map((column, index) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <DragIndicator sx={{ color: 'text.secondary' }} />
+                      <TextField
+                        value={column}
+                        onChange={(e) => handleTableColumnChange(index, e.target.value)}
+                        size="small"
+                        sx={{ flex: 1 }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => removeTableColumn(index)}
+                        color="error"
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Stack>
+                
+                <TextField
+                  label="Number of Rows"
+                  type="number"
+                  value={localField.rows || 3}
+                  onChange={(e) => handleChange('rows', parseInt(e.target.value) || 3)}
+                  fullWidth
+                  size="small"
+                  inputProps={{ min: 1, max: 20 }}
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         );
 
       case 'wizard':
         return (
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2">Steps:</Typography>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                onClick={handleWizardStepAdd}
-              >
-                Add Step
-              </Button>
-            </Box>
-            <Stack spacing={2}>
-              {(properties.steps || []).map((step, index) => (
-                <Accordion key={index} defaultExpanded>
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                      <DragIndicator color="action" />
-                      <Typography variant="subtitle2">{step.title}</Typography>
-                      <Chip label={`${step.fields?.length || 0} fields`} size="small" />
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Stack spacing={2}>
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Wizard Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle2">Steps</Typography>
+                  <Button
+                    startIcon={<Add />}
+                    onClick={addWizardStep}
+                    size="small"
+                    variant="outlined"
+                  >
+                    Add Step
+                  </Button>
+                </Box>
+                
+                <Stack spacing={2}>
+                  {(localField.steps || []).map((step, stepIndex) => (
+                    <Box key={stepIndex} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle2">Step {stepIndex + 1}</Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => removeWizardStep(stepIndex)}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Box>
+                      
                       <TextField
                         label="Step Title"
-                        value={step.title}
-                        onChange={(e) => handleWizardStepChange(index, 'title', e.target.value)}
+                        value={step.title || ''}
+                        onChange={(e) => handleWizardStepChange(stepIndex, 'title', e.target.value)}
+                        size="small"
                         fullWidth
-                        size="small"
+                        sx={{ mb: 1 }}
                       />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2">Fields:</Typography>
-                        <Button
-                          size="small"
-                          startIcon={<Add />}
-                          onClick={() => {
-                            const newField = {
-                              id: Date.now().toString(),
-                              type: 'text',
-                              label: 'New Field',
-                              required: false
-                            };
-                            const newFields = [...(step.fields || []), newField];
-                            handleWizardStepChange(index, 'fields', newFields);
-                          }}
-                        >
-                          Add Field
-                        </Button>
-                      </Box>
-                      <Stack spacing={1}>
-                        {(step.fields || []).map((stepField, fieldIndex) => (
-                          <Box key={fieldIndex} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TextField
-                              size="small"
-                              value={stepField.label}
-                              onChange={(e) => {
-                                const newFields = [...(step.fields || [])];
-                                newFields[fieldIndex] = { ...newFields[fieldIndex], label: e.target.value };
-                                handleWizardStepChange(index, 'fields', newFields);
-                              }}
-                              sx={{ flex: 1 }}
-                            />
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => {
-                                const newFields = step.fields.filter((_, i) => i !== fieldIndex);
-                                handleWizardStepChange(index, 'fields', newFields);
-                              }}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </Box>
-                        ))}
-                      </Stack>
-                      <IconButton
+                      
+                      <TextField
+                        label="Step Description"
+                        value={step.description || ''}
+                        onChange={(e) => handleWizardStepChange(stepIndex, 'description', e.target.value)}
                         size="small"
-                        color="error"
-                        onClick={() => handleWizardStepDelete(index)}
-                        sx={{ alignSelf: 'flex-start' }}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Stack>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-            </Stack>
-          </Stack>
+                        fullWidth
+                        multiline
+                        rows={2}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'richtext':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Rich Text Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Default Content"
+                  value={localField.defaultValue || ''}
+                  onChange={(e) => handleChange('defaultValue', e.target.value)}
+                  fullWidth
+                  size="small"
+                  multiline
+                  rows={4}
+                />
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={localField.allowImages || false}
+                      onChange={(e) => handleChange('allowImages', e.target.checked)}
+                    />
+                  }
+                  label="Allow Images"
+                />
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={localField.allowTables || false}
+                      onChange={(e) => handleChange('allowTables', e.target.checked)}
+                    />
+                  }
+                  label="Allow Tables"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'signature':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Signature Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Signature Width"
+                  type="number"
+                  value={localField.width || 300}
+                  onChange={(e) => handleChange('width', parseInt(e.target.value) || 300)}
+                  fullWidth
+                  size="small"
+                  inputProps={{ min: 100, max: 800 }}
+                />
+                
+                <TextField
+                  label="Signature Height"
+                  type="number"
+                  value={localField.height || 150}
+                  onChange={(e) => handleChange('height', parseInt(e.target.value) || 150)}
+                  fullWidth
+                  size="small"
+                  inputProps={{ min: 50, max: 400 }}
+                />
+                
+                <TextField
+                  label="Pen Color"
+                  value={localField.penColor || '#000000'}
+                  onChange={(e) => handleChange('penColor', e.target.value)}
+                  fullWidth
+                  size="small"
+                  type="color"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         );
 
       default:
         return null;
     }
-  };
-
-  return (
-    <Box>
-      <Stack spacing={3}>
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Basic Properties
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            {renderBasicProperties()}
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Field Specific Properties
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            {renderFieldSpecificProperties()}
-          </AccordionDetails>
-        </Accordion>
-      </Stack>
-    </Box>
-  );
+  }
 } 

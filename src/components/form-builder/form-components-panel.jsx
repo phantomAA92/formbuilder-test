@@ -13,7 +13,8 @@ import {
   Subject, 
   TableChart, 
   TextFields,
-  ViewTimeline
+  ViewTimeline,
+  Draw
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -32,6 +33,7 @@ const formComponents = [
   { type: 'link', label: 'Link Input', icon: Link, description: 'URL input field' },
   { type: 'table', label: 'Table', icon: TableChart, description: 'Data table input' },
   { type: 'richtext', label: 'Rich Text', icon: Description, description: 'Rich text editor' },
+  { type: 'signature', label: 'Signature', icon: Draw, description: 'Digital signature capture' },
   { type: 'wizard', label: 'Multi-Step Wizard', icon: ViewTimeline, description: 'Multi-step form wizard' }
 ];
 
@@ -40,7 +42,11 @@ function DraggableComponent({ component, onAddField }) {
     type: ItemTypes.COMPONENT,
     item: () => {
       const defaultData = getDefaultFieldData(component.type);
-      return { type: component.type, defaultData };
+      return { 
+        type: ItemTypes.COMPONENT, 
+        componentType: component.type, 
+        defaultData 
+      };
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -76,13 +82,15 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Table', columns: ['Column 1', 'Column 2'], rows: 3, required: false };
       case 'richtext':
         return { label: 'Rich Text', placeholder: 'Enter rich text...', required: false };
+      case 'signature':
+        return { label: 'Signature', width: 300, height: 150, penColor: '#000000', required: false };
       case 'wizard':
         return { 
           label: 'Multi-Step Wizard', 
           steps: [
-            { title: 'Step 1', fields: [] },
-            { title: 'Step 2', fields: [] },
-            { title: 'Step 3', fields: [] }
+            { title: 'Step 1', description: 'First step description', fields: [] },
+            { title: 'Step 2', description: 'Second step description', fields: [] },
+            { title: 'Step 3', description: 'Third step description', fields: [] }
           ], 
           required: false 
         };
@@ -123,59 +131,13 @@ function DraggableComponent({ component, onAddField }) {
 }
 
 export default function FormComponentsPanel({ onAddField }) {
-  const handleAddComponent = (componentType) => {
-    const defaultData = getDefaultFieldData(componentType);
-    onAddField(componentType, defaultData);
-  };
-
-  const getDefaultFieldData = (type) => {
-    switch (type) {
-      case 'text':
-        return { label: 'Text Input', placeholder: 'Enter text...', required: false };
-      case 'textarea':
-        return { label: 'Text Area', placeholder: 'Enter text...', rows: 4, required: false };
-      case 'radio':
-        return { label: 'Radio Buttons', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
-      case 'checkbox':
-        return { label: 'Checkboxes', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
-      case 'dropdown':
-        return { label: 'Dropdown', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
-      case 'number':
-        return { label: 'Number', placeholder: 'Enter number...', min: 0, max: 999999, required: false };
-      case 'date':
-        return { label: 'Date', required: false };
-      case 'attachment':
-        return { label: 'File Upload', accept: '.pdf,.doc,.docx,.jpg,.png', multiple: false, required: false };
-      case 'link':
-        return { label: 'Link', placeholder: 'https://example.com', required: false };
-      case 'table':
-        return { label: 'Table', columns: ['Column 1', 'Column 2'], rows: 3, required: false };
-      case 'richtext':
-        return { label: 'Rich Text', placeholder: 'Enter rich text...', required: false };
-      case 'signature':
-        return { label: 'Signature', required: false };
-      case 'wizard':
-        return { 
-          label: 'Multi-Step Wizard', 
-          steps: [
-            { title: 'Step 1', fields: [] },
-            { title: 'Step 2', fields: [] },
-            { title: 'Step 3', fields: [] }
-          ], 
-          required: false 
-        };
-      default:
-        return { label: 'New Field', required: false };
-    }
-  };
-
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
         Form Components
       </Typography>
       <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-        Click to add components to your form
+        Click to add or drag to drop components
       </Typography>
       
       <List sx={{ p: 0 }}>
@@ -183,7 +145,7 @@ export default function FormComponentsPanel({ onAddField }) {
           <Box key={component.type}>
             <DraggableComponent 
               component={component} 
-              onAddField={handleAddComponent} 
+              onAddField={onAddField} 
             />
             {index < formComponents.length - 1 && <Divider />}
           </Box>

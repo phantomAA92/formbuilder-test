@@ -4,10 +4,8 @@ import { useParams, useNavigate } from 'react-router';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { Alert, Box, Button, Container, Paper, Typography } from '@mui/material';
 
-import { FormBuilder } from '../../components/form-builder';
-import FormComponentsPanel from '../../components/form-builder/form-components-panel';
-import FormPreview from '../../components/form-builder/form-preview';
 import FormService, { mockForms } from '../../lib/form-service';
+import EnhancedFormBuilder from '../../components/form-builder/enhanced-form-builder';
 
 export default function CustomFormPage() {
   const { formId } = useParams();
@@ -34,7 +32,7 @@ export default function CustomFormPage() {
       setError(null);
       
       let form;
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         form = mockForms.find(f => f.id === formId);
         if (!form) {
           throw new Error('Form not found');
@@ -56,7 +54,7 @@ export default function CustomFormPage() {
 
   const handleAddField = (type, defaultData) => {
     const newField = {
-      id: Date.now().toString(),
+      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
       ...defaultData
     };
@@ -129,13 +127,13 @@ export default function CustomFormPage() {
       
       let savedForm;
       if (isEditing) {
-        if (process.env.NODE_ENV !== 'development') {
+        if (import.meta.env.MODE !== 'development') {
           savedForm = await FormService.updateForm(formId, formData);
         } else {
           savedForm = { ...formData, id: formId };
         }
       } else {
-        if (process.env.NODE_ENV !== 'development') {
+        if (import.meta.env.MODE !== 'development') {
           savedForm = await FormService.saveForm(formData);
         } else {
           savedForm = { ...formData, id: Date.now().toString() };
@@ -152,12 +150,12 @@ export default function CustomFormPage() {
         setTimeout(() => setError(null), 3000);
       }
       
-          } catch (saveError) {
-        console.error('Error saving form:', saveError);
-        setError('Failed to save form. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+    } catch (saveError) {
+      console.error('Error saving form:', saveError);
+      setError('Failed to save form. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -207,30 +205,16 @@ export default function CustomFormPage() {
         </Alert>
       )}
       
-      <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 200px)' }}>
-        {/* Left Panel - Form Components */}
-        <Paper sx={{ width: 300, p: 2, overflow: 'auto' }}>
-          <FormComponentsPanel onAddField={handleAddField} />
-        </Paper>
-        
-        {/* Center Panel - Form Builder */}
-        <Paper sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-          <FormBuilder
-            formData={formData}
-            onUpdateField={handleUpdateField}
-            onDeleteField={handleDeleteField}
-            onMoveField={handleMoveField}
-            onSelectField={setSelectedField}
-            selectedField={selectedField}
-            onSave={handleSaveForm}
-          />
-        </Paper>
-        
-        {/* Right Panel - Form Preview */}
-        <Paper sx={{ width: 400, p: 2, overflow: 'auto' }}>
-          <FormPreview formData={formData} />
-        </Paper>
-      </Box>
+      {/* Enhanced Form Builder */}
+      <EnhancedFormBuilder
+        formData={formData}
+        onUpdateField={handleUpdateField}
+        onDeleteField={handleDeleteField}
+        onMoveField={handleMoveField}
+        onSelectField={setSelectedField}
+        selectedField={selectedField}
+        onSave={handleSaveForm}
+      />
     </Container>
   );
 } 

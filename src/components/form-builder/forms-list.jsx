@@ -1,49 +1,41 @@
+import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 
 import {
   Add,
-  ContentCopy,
+  Edit,
+  Visibility,
   Delete,
   Download,
-  Edit,
-  Search
+  Assessment
 } from '@mui/icons-material';
 import {
-  Alert,
   Box,
   Button,
+  Card,
+  CardContent,
+  CardActions,
+  Grid,
+  Typography,
   Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
   IconButton,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography
+  Divider
 } from '@mui/material';
 
-import { LocalFormService } from '../../services/form-service';
+import FormService, { mockForms } from '../../lib/form-service';
 
-export default function FormsList({ onEditForm, onViewForm, onDeleteForm }) {
+export default function FormsList() {
+  const navigate = useNavigate();
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [error, setError] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, form: null });
 
   useEffect(() => {
@@ -53,265 +45,379 @@ export default function FormsList({ onEditForm, onViewForm, onDeleteForm }) {
   const loadForms = async () => {
     try {
       setLoading(true);
-      const formsData = LocalFormService.getForms();
-      setForms(formsData);
-    } catch (error) {
-      console.error('Error loading forms:', error);
+      setError(null);
+      
+      let formsData;
+      console.log('✌️import.meta.env.MODE --->', import.meta.env.MODE);
+      if (import.meta.env.MODE === 'development') {
+        formsData = mockForms;
+      } else {
+        formsData = await FormService.getForms();
+      }
+      
+             // Sanitize and validate the forms data
+      //  const sanitizedForms = (formsData || []).map(form => {
+      //    try {
+      //      // Ensure we have a safe form object with only primitive values
+      //      const safeForm = {
+      //        id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
+      //        title: String(form?.title || 'Untitled Form'),
+      //        description: String(form?.description || ''),
+      //        type: String(form?.type || 'custom'),
+      //        fields: Array.isArray(form?.fields) ? form.fields : [],
+      //        createdAt: String(form?.createdAt || new Date().toISOString()),
+      //        updatedAt: String(form?.updatedAt || new Date().toISOString())
+      //      };
+           
+      //      return safeForm;
+      //    } catch (formError) {
+      //      console.warn('Error processing form:', String(formError));
+      //      // Return a safe fallback form
+      //      return {
+      //        id: `form_${Math.random().toString(36).substring(2, 11)}`,
+      //        title: 'Corrupted Form',
+      //        description: 'This form has corrupted data',
+      //        type: 'custom',
+      //        fields: [],
+      //        createdAt: new Date().toISOString(),
+      //        updatedAt: new Date().toISOString()
+      //      };
+      //    }
+      //  });
+      const sanitizedForms = []
+      
+      setForms(sanitizedForms);
+    } catch (loadError) {
+      console.error('Error loading forms:', String(loadError));
+      setError('Failed to load forms. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleCategoryFilter = (event) => {
-    setCategoryFilter(event.target.value);
-  };
-
-  const handleDeleteClick = (form) => {
-    setDeleteDialog({ open: true, form });
-  };
-
-  const handleDeleteConfirm = async () => {
+  const handleDeleteForm = async () => {
+    if (!deleteDialog.form) return;
+    
     try {
-      await LocalFormService.deleteForm(deleteDialog.form.id);
-      setForms(forms.filter(f => f.id !== deleteDialog.form.id));
-      setDeleteDialog({ open: false, form: null });
-      if (onDeleteForm) {
-        onDeleteForm(deleteDialog.form.id);
+      if (import.meta.env.MODE !== 'development') {
+        await FormService.deleteForm(deleteDialog.form.id);
       }
-    } catch (error) {
-      console.error('Error deleting form:', error);
-    }
-  };
-
-  const handleCloneForm = async (form) => {
-    try {
-      const clonedForm = {
-        ...form,
-        title: `${form.title} (Copy)`,
-        description: `${form.description} - Cloned from original`
-      };
       
-      const savedForm = LocalFormService.saveForm(clonedForm);
-      setForms([...forms, savedForm]);
-    } catch (error) {
-      console.error('Error cloning form:', error);
+      setForms(prev => prev.filter(form => form.id !== deleteDialog.form.id));
+      setDeleteDialog({ open: false, form: null });
+    } catch (deleteError) {
+      console.error('Error deleting form:', String(deleteError));
+      setError('Failed to delete form. Please try again.');
     }
   };
 
-  const handleExportForm = (form) => {
+  const handleExportForm = async (formId, format = 'pdf') => {
     try {
-      const formData = JSON.stringify(form, null, 2);
-      const blob = new Blob([formData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${form.title.replace(/\s+/g, '_')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error exporting form:', error);
+      if (import.meta.env.MODE !== 'development') {
+        const blob = await FormService.exportFormData(formId, format);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `form-${formId}.${format}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        // In development, just show a message
+        alert('Export functionality is available in production mode');
+      }
+    } catch (exportError) {
+      console.error('Error exporting form:', String(exportError));
+      setError('Failed to export form. Please try again.');
     }
   };
 
-  const filteredForms = forms.filter(form => {
-    const matchesSearch = form.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         form.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || form.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const handleGenerateReport = async (formId, reportType) => {
+    try {
+      if (import.meta.env.MODE !== 'development') {
+        const report = await FormService.generateReport(formId, reportType);
+        
+        // Handle report display/download
+      } else {
+        // In development, just show a message
+        alert(`Report generation for ${reportType} is available in production mode`);
+      }
+    } catch (reportError) {
+      console.error('Error generating report:', String(reportError));
+      setError('Failed to generate report. Please try again.');
+    }
+  };
 
-  const categories = ['all', ...Array.from(new Set(forms.map(form => form.category).filter(Boolean))];
+  const getFormTypeLabel = (type) => {
+    switch (type) {
+      case 'report':
+        return 'Report Form';
+      case 'profile':
+        return 'Profile Form';
+      case 'custom':
+        return 'Custom Form';
+      default:
+        return 'Form';
+    }
+  };
+
+  const getFormTypeColor = (type) => {
+    switch (type) {
+      case 'report':
+        return 'primary';
+      case 'profile':
+        return 'secondary';
+      case 'custom':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress size={48} />
       </Box>
     );
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Custom Forms
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" fontWeight={600}>
+          Forms Library
         </Typography>
+        
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => onEditForm && onEditForm()}
+          onClick={() => navigate('/custom-form')}
+          size="large"
         >
           Create New Form
         </Button>
       </Box>
 
-      {/* Search and Filters */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            placeholder="Search forms..."
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              )
-            }}
-            sx={{ flex: 1 }}
-            size="small"
-          />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Category</InputLabel>
-            <Select
-              value={categoryFilter}
-              label="Category"
-              onChange={handleCategoryFilter}
-            >
-              {categories.map(category => (
-                <MenuItem key={category} value={category}>
-                  {category === 'all' ? 'All Categories' : category}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Stack>
-      </Paper>
+      {/* Error Message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-      {/* Forms Table */}
-      {filteredForms.length > 0 ? (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Form Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Fields</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredForms.map((form) => (
-                <TableRow key={form.id} hover>
-                  <TableCell>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {form.title}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
-                      {form.description}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {form.category && (
-                      <Chip label={form.category} size="small" color="primary" variant="outlined" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {form.fields ? form.fields.length : 0} fields
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {new Date(form.createdAt).toLocaleDateString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Tooltip title="View Form">
-                        <IconButton
+      {/* Forms Grid */}
+      {forms.length > 0 ? (
+        <Grid container spacing={3}>
+          {forms.map((form) => {
+            try {
+                             // Ensure form has all required properties with safe string conversion
+               const safeForm = {
+                 id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
+                 title: String(form?.title || 'Untitled Form'),
+                 description: String(form?.description || ''),
+                 type: String(form?.type || 'custom'),
+                 fields: Array.isArray(form?.fields) ? form.fields : []
+               };
+              
+              return (
+                <Grid item xs={12} sm={6} md={4} key={safeForm.id}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Chip
+                          label={getFormTypeLabel(safeForm.type)}
+                          color={getFormTypeColor(safeForm.type)}
                           size="small"
-                          onClick={() => onViewForm && onViewForm(form)}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {safeForm.fields.length || 0} fields
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                        {safeForm.title}
+                      </Typography>
+                      
+                      {safeForm.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {safeForm.description}
+                        </Typography>
+                      )}
+                      
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {safeForm.fields.slice(0, 3).map((field, index) => {
+                          try {
+                            const fieldType = field?.type || 'unknown';
+                            return (
+                              <Chip
+                                key={`${safeForm.id}_field_${index}`}
+                                label={fieldType}
+                                size="small"
+                                variant="outlined"
+                                sx={{ textTransform: 'capitalize' }}
+                              />
+                            );
+                                                     } catch (fieldError) {
+                             console.warn('Error rendering field:', String(fieldError));
+                             return (
+                              <Chip
+                                key={`${safeForm.id}_field_${index}`}
+                                label="unknown"
+                                size="small"
+                                variant="outlined"
+                                sx={{ textTransform: 'capitalize' }}
+                              />
+                            );
+                          }
+                        })}
+                        {safeForm.fields.length > 3 && (
+                          <Chip
+                            label={`+${safeForm.fields.length - 3} more`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+
+                    <Divider />
+                    
+                    <CardActions sx={{ p: 2, pt: 1 }}>
+                      <Stack direction="row" spacing={1} sx={{ flex: 1 }}>
+                        <Button
+                          size="small"
+                          startIcon={<Visibility />}
+                          onClick={() => navigate(`/form-view/${safeForm.id}`)}
+                          variant="outlined"
+                          sx={{ flex: 1 }}
                         >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit Form">
-                        <IconButton
+                          View
+                        </Button>
+                        
+                        <Button
                           size="small"
-                          onClick={() => onEditForm && onEditForm(form)}
+                          startIcon={<Edit />}
+                          onClick={() => navigate(`/custom-form/${safeForm.id}`)}
+                          variant="outlined"
+                          sx={{ flex: 1 }}
                         >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Clone Form">
+                          Edit
+                        </Button>
+                      </Stack>
+                    </CardActions>
+
+                    <Box sx={{ p: 2, pt: 0 }}>
+                      <Stack direction="row" spacing={1} justifyContent="center">
                         <IconButton
                           size="small"
-                          onClick={() => handleCloneForm(form)}
-                        >
-                          <ContentCopy />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Export Form">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleExportForm(form)}
+                          onClick={() => handleExportForm(safeForm.id, 'pdf')}
+                          title="Export as PDF"
                         >
                           <Download />
                         </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete Form">
+                        
+                        {safeForm.type === 'report' && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleGenerateReport(safeForm.id, 'dmas')}
+                            title="Generate DMAS Report"
+                          >
+                            <Assessment />
+                          </IconButton>
+                        )}
+                        
                         <IconButton
                           size="small"
+                          onClick={() => setDeleteDialog({ open: true, form: safeForm })}
                           color="error"
-                          onClick={() => handleDeleteClick(form)}
+                          title="Delete Form"
                         >
                           <Delete />
                         </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </Stack>
+                    </Box>
+                  </Card>
+                </Grid>
+              );
+                         } catch (formError) {
+               console.error('Error rendering form:', String(formError));
+               // Return a fallback card for corrupted forms
+              return (
+                                 <Grid item xs={12} sm={6} md={4} key={`error_${Math.random().toString(36).substring(2, 11)}`}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
+                      <Typography variant="h6" color="error" sx={{ mb: 1 }}>
+                        Corrupted Form
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        This form could not be displayed due to data corruption.
+                      </Typography>
+                    </CardContent>
+                    <CardActions sx={{ justifyContent: 'center' }}>
+                      <Button
+                        size="small"
+                        color="error"
+                        variant="outlined"
+                        onClick={() => {
+                          try {
+                            // Try to remove the corrupted form
+                            setForms(prev => prev.filter(f => f.id !== form.id));
+                                                     } catch (removeError) {
+                             console.error('Error removing corrupted form:', String(removeError));
+                           }
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            }
+          })}
+        </Grid>
       ) : (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-            No forms found
+            No forms created yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {searchTerm || categoryFilter !== 'all' 
-              ? 'Try adjusting your search criteria or filters.'
-              : 'Create your first custom form to get started.'}
+            Start building your first custom form to create reports, profiles, and more.
           </Typography>
-          {!searchTerm && categoryFilter === 'all' && (
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => onEditForm && onEditForm()}
-            >
-              Create New Form
-            </Button>
-          )}
-        </Paper>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => navigate('/custom-form')}
+            size="large"
+          >
+            Create Your First Form
+          </Button>
+        </Box>
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, form: null })}>
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, form: null })}
+      >
         <DialogTitle>Delete Form</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{deleteDialog.form?.title}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{deleteDialog.form?.title || 'this form'}&quot;? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialog({ open: false, form: null })}>
+          <Button
+            onClick={() => setDeleteDialog({ open: false, form: null })}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button
+            onClick={handleDeleteForm}
+            color="error"
+            variant="contained"
+          >
             Delete
           </Button>
         </DialogActions>
