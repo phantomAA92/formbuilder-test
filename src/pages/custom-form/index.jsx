@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 
-import { ArrowBack, Save } from '@mui/icons-material';
-import { Alert, Box, Button, Container, Paper, Typography } from '@mui/material';
+import { Save, ArrowBack } from '@mui/icons-material';
+import { Box, Alert, Button, Container, Typography } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
 import EnhancedFormBuilder from '../../components/form-builder/enhanced-form-builder';
@@ -24,6 +24,7 @@ export default function CustomFormPage() {
     if (formId) {
       loadExistingForm();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId]);
 
   const loadExistingForm = async () => {
@@ -50,18 +51,6 @@ export default function CustomFormPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAddField = (type, defaultData) => {
-    const newField = {
-      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      ...defaultData
-    };
-    setFormData(prev => ({
-      ...prev,
-      fields: [...prev.fields, newField]
-    }));
   };
 
   const handleUpdateField = (fieldId, updates) => {

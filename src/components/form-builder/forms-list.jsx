@@ -4,29 +4,29 @@ import { useState, useEffect } from 'react';
 import {
   Add,
   Edit,
-  Visibility,
   Delete,
   Download,
+  Visibility,
   Assessment
 } from '@mui/icons-material';
 import {
   Box,
-  Button,
   Card,
+  Grid,
+  Chip,
+  Alert,
+  Stack,
+  Button,
+  Dialog,
+  Divider,
+  Typography,
+  IconButton,
   CardContent,
   CardActions,
-  Grid,
-  Typography,
-  Chip,
-  IconButton,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert,
-  CircularProgress,
-  Stack,
-  Divider
+  CircularProgress
 } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
@@ -134,8 +134,7 @@ export default function FormsList() {
   const handleGenerateReport = async (formId, reportType) => {
     try {
       if (import.meta.env.MODE !== 'development') {
-        const report = await FormService.generateReport(formId, reportType);
-        
+        await FormService.generateReport(formId, reportType);
         // Handle report display/download
       } else {
         // In development, just show a message

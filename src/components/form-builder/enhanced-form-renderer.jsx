@@ -46,9 +46,11 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
 
   // Generate validation schema based on form fields
   const generateValidationSchema = (fields) => {
+    console.log('Generating validation schema for fields:', fields);
     const schemaObject = {};
     
     fields.forEach(field => {
+      console.log(`Processing field: ${field.id} (${field.type}) - required: ${field.required}`);
       let fieldSchema = z.any();
       
       if (field.required) {
@@ -590,9 +592,18 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             <SignatureField
               field={field}
               value={signatures[field.id]}
-              onChange={(signatureData) => handleSignatureChange(field.id, signatureData)}
+              onChange={(signatureData) => {
+                // Update both signatures state and main form values
+                handleSignatureChange(field.id, signatureData);
+                handleFieldChange(field.id, signatureData);
+              }}
               required={field.required}
             />
+            {errors[field.id] && (
+              <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                {errors[field.id].message}
+              </Typography>
+            )}
           </Box>
         );
 
