@@ -43,6 +43,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
   const [formValues, setFormValues] = useState({});
   const [signatures, setSignatures] = useState({});
   const [tableData, setTableData] = useState({});
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Generate validation schema based on form fields
   const generateValidationSchema = (fields) => {
@@ -160,20 +161,31 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
   };
 
   const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    const wizardField = formData.fields?.find(field => field.type === 'wizard');
+    const steps = wizardField?.steps || [];
+    
+    if (activeStep === steps.length - 1) {
+      // This is the last step, show success message
+      setShowSuccess(true);
+      // Reset form after showing success
+      setTimeout(() => {
+        setShowSuccess(false);
+        setActiveStep(0);
+        setFormValues({});
+        setSignatures({});
+        setTableData({});
+        methods.reset();
+      }, 3000);
+    } else {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    }
   };
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const handleReset = () => {
-    setActiveStep(0);
-    setFormValues({});
-    setSignatures({});
-    setTableData({});
-    methods.reset();
-  };
+
 
   // Check if form has wizard fields
   const hasWizard = formData.fields?.some(field => field.type === 'wizard');
@@ -249,20 +261,52 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
               </Typography>
             )}
 
-            <Stepper activeStep={activeStep} orientation="vertical">
+            <Stepper activeStep={activeStep} orientation="horizontal" sx={{ mb: 3 }}>
               {steps.map((step, index) => (
                 <Step key={index}>
                   <StepLabel>{step.title}</StepLabel>
-                  <StepContent>
-                    {step.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        {step.description}
-                      </Typography>
-                    )}
-                    
-                    <Box sx={{ mb: 2 }}>
-                      {step.fields?.map((field) => (
-                        <Box key={field.id} sx={{ mb: 3 }}>
+                </Step>
+              ))}
+            </Stepper>
+
+            {/* Show only the active step content */}
+            {steps[activeStep] && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  {steps[activeStep].title}
+                </Typography>
+                
+                {steps[activeStep].description && (
+                  <Box sx={{ 
+                    mb: 3, 
+                    p: 2, 
+                    bgcolor: 'primary.50', 
+                    borderRadius: 2, 
+                    border: '1px solid',
+                    borderColor: 'primary.200'
+                  }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ 
+                      lineHeight: 1.6,
+                      '&::before': {
+                        content: '"💡 "',
+                        mr: 1
+                      }
+                    }}>
+                      {steps[activeStep].description}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Step Fields with Column Layout */}
+                <Box sx={{ mb: 2 }}>
+                  {steps[activeStep].fields && steps[activeStep].fields.length > 0 ? (
+                    <Box sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: 3
+                    }}>
+                      {steps[activeStep].fields.map((field) => (
+                        <Box key={field.id}>
                           {renderField(field)}
                           {errors[field.id] && (
                             <Alert severity="error" sx={{ mt: 1 }}>
@@ -272,39 +316,45 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                         </Box>
                       ))}
                     </Box>
-                    
-                    <Box sx={{ mb: 2 }}>
-                      <Button
-                        variant="contained"
-                        onClick={handleNext}
-                        sx={{ mt: 1, mr: 1 }}
-                        startIcon={<ArrowForward />}
-                      >
-                        {index === steps.length - 1 ? 'Finish' : 'Continue'}
-                      </Button>
-                      <Button
-                        disabled={index === 0}
-                        onClick={handleBack}
-                        sx={{ mt: 1, mr: 1 }}
-                        startIcon={<ArrowBack />}
-                      >
-                        Back
-                      </Button>
-                    </Box>
-                  </StepContent>
-                </Step>
-              ))}
-            </Stepper>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                      No fields in this step. Add fields to see them here.
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            )}
             
-            {activeStep === steps.length && (
-              <Paper square elevation={0} sx={{ p: 3, mt: 3, bgcolor: 'grey.50' }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  All steps completed - you&apos;re finished
-                </Typography>
-                <Button onClick={handleReset} variant="contained">
-                  Reset
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 2 }}>
+              {activeStep > 0 && (
+                <Button
+                  onClick={handleBack}
+                  sx={{ mt: 1 }}
+                  startIcon={<ArrowBack />}
+                >
+                  Back
                 </Button>
-              </Paper>
+              )}
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                sx={{ mt: 1 }}
+                startIcon={<ArrowForward />}
+              >
+                {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+              </Button>
+            </Box>
+
+            {/* Success Message */}
+            {showSuccess && (
+              <Alert severity="success" sx={{ mt: 3 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  🎉 Form Completed Successfully!
+                </Typography>
+                <Typography variant="body2">
+                  Thank you for completing the form. All your information has been submitted successfully.
+                </Typography>
+              </Alert>
             )}
           </Paper>
         </LocalizationProvider>

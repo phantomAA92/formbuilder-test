@@ -329,7 +329,7 @@ export default function EnhancedFormBuilder({
           onClose={handleCloseDrawer}
           sx={{
             '& .MuiDrawer-paper': {
-              width: 400,
+              width: selectedField?.type === 'wizard' ? 600 : 400,
               maxWidth: '90vw'
             }
           }}

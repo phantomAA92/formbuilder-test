@@ -88,9 +88,21 @@ function DraggableComponent({ component, onAddField }) {
         return { 
           label: 'Multi-Step Wizard', 
           steps: [
-            { title: 'Step 1', description: 'First step description', fields: [] },
-            { title: 'Step 2', description: 'Second step description', fields: [] },
-            { title: 'Step 3', description: 'Third step description', fields: [] }
+            { 
+              title: 'Basic Information', 
+              description: 'Provide essential personal details including name, contact information, and address. This step collects the fundamental information needed to identify and contact the caregiver.',
+              fields: [] 
+            },
+            { 
+              title: 'Professional Details', 
+              description: 'Collect professional qualifications, experience, availability, and work preferences. This step gathers information about the caregiver\'s professional background and work schedule.',
+              fields: [] 
+            },
+            { 
+              title: 'Documents & Certifications', 
+              description: 'Upload required documents and certifications including CV, background checks, and training certificates. This step ensures all necessary documentation is provided.',
+              fields: [] 
+            }
           ], 
           required: false 
         };

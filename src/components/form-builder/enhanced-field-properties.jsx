@@ -17,7 +17,10 @@ import {
   IconButton,
   FormControlLabel,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Select,
+  MenuItem,
+  Checkbox
 } from '@mui/material';
 
 export default function EnhancedFieldProperties({ field, onUpdate }) {
@@ -519,6 +522,25 @@ export default function EnhancedFieldProperties({ field, onUpdate }) {
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'info.50', 
+                  borderRadius: 1, 
+                  border: '1px solid',
+                  borderColor: 'info.200'
+                }}>
+                  <Typography variant="body2" color="info.700" sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    '&::before': {
+                      content: '"💡 "',
+                      mr: 1
+                    }
+                  }}>
+                    <strong>Tip:</strong> Write clear, descriptive step descriptions to help users understand what information they need to provide in each step. Good descriptions improve user experience and reduce form abandonment.
+                  </Typography>
+                </Box>
+                
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle2">Steps</Typography>
                   <Button
@@ -545,6 +567,10 @@ export default function EnhancedFieldProperties({ field, onUpdate }) {
                         </IconButton>
                       </Box>
                       
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                        Configure the title and description for this step. The description will be displayed to users to help them understand what information to provide.
+                      </Typography>
+                      
                       <TextField
                         label="Step Title"
                         value={step.title || ''}
@@ -562,7 +588,249 @@ export default function EnhancedFieldProperties({ field, onUpdate }) {
                         fullWidth
                         multiline
                         rows={2}
+                        sx={{ mb: 2 }}
+                        helperText="Describe what information will be collected in this step. This helps users understand what to expect."
+                        placeholder="e.g., Provide essential personal details including name, contact information, and address."
                       />
+
+                      {/* Column Layout Configuration */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Column Layout</Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Columns:</Typography>
+                          <Select
+                            size="small"
+                            value={step.columns || 1}
+                            onChange={(e) => handleWizardStepChange(stepIndex, 'columns', e.target.value)}
+                            sx={{ minWidth: 80 }}
+                          >
+                            <MenuItem value={1}>1 Column</MenuItem>
+                            <MenuItem value={2}>2 Columns</MenuItem>
+                            <MenuItem value={3}>3 Columns</MenuItem>
+                            <MenuItem value={4}>4 Columns</MenuItem>
+                          </Select>
+                        </Box>
+                      </Box>
+
+                      {/* Step Fields Management */}
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography variant="subtitle2">Step Fields</Typography>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                              const newField = {
+                                id: `step_${stepIndex}_field_${Date.now()}`,
+                                type: 'text',
+                                label: 'New Field',
+                                required: false,
+                                column: 0
+                              };
+                              const updatedFields = [...(step.fields || []), newField];
+                              handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                            }}
+                          >
+                            Add Field
+                          </Button>
+                        </Box>
+                        
+                        {step.fields && step.fields.length > 0 ? (
+                          <Stack spacing={1}>
+                            {step.fields.map((stepField, fieldIndex) => (
+                              <Box key={fieldIndex} sx={{ 
+                                border: '1px solid', 
+                                borderColor: 'divider', 
+                                borderRadius: 1, 
+                                p: 1
+                              }}>
+                                {/* Field Header */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                  <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                                    {stepField.label || `Field ${fieldIndex + 1}`}
+                                  </Typography>
+                                  <Select
+                                    size="small"
+                                    value={stepField.type || 'text'}
+                                    onChange={(e) => {
+                                      const updatedFields = [...(step.fields || [])];
+                                      updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], type: e.target.value };
+                                      handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                    }}
+                                    sx={{ minWidth: 120 }}
+                                  >
+                                    <MenuItem value="text">Text Input</MenuItem>
+                                    <MenuItem value="textarea">Text Area</MenuItem>
+                                    <MenuItem value="email">Email</MenuItem>
+                                    <MenuItem value="number">Number</MenuItem>
+                                    <MenuItem value="date">Date</MenuItem>
+                                    <MenuItem value="radio">Radio Buttons</MenuItem>
+                                    <MenuItem value="checkbox">Checkboxes</MenuItem>
+                                    <MenuItem value="dropdown">Dropdown</MenuItem>
+                                    <MenuItem value="attachment">File Upload</MenuItem>
+                                  </Select>
+                                  <Select
+                                    size="small"
+                                    value={stepField.column || 0}
+                                    onChange={(e) => {
+                                      const updatedFields = [...(step.fields || [])];
+                                      updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], column: e.target.value };
+                                      handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                    }}
+                                    sx={{ minWidth: 100 }}
+                                  >
+                                    {Array.from({ length: step.columns || 1 }).map((_, colIndex) => (
+                                      <MenuItem key={colIndex} value={colIndex}>
+                                        Column {colIndex + 1}
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={stepField.required || false}
+                                        onChange={(e) => {
+                                          const updatedFields = [...(step.fields || [])];
+                                          updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], required: e.target.checked };
+                                          handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                        }}
+                                      />
+                                    }
+                                    label="Required"
+                                  />
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      const updatedFields = step.fields.filter((_, i) => i !== fieldIndex);
+                                      handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                    }}
+                                    color="error"
+                                  >
+                                    <Delete />
+                                  </IconButton>
+                                </Box>
+                                
+                                {/* Expandable Field Properties */}
+                                <Accordion size="small" sx={{ '&:before': { display: 'none' } }}>
+                                  <AccordionSummary expandIcon={<ExpandMore />}>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Field Properties
+                                    </Typography>
+                                  </AccordionSummary>
+                                  <AccordionDetails>
+                                    <Stack spacing={2}>
+                                      {/* Basic Properties */}
+                                      <TextField
+                                        size="small"
+                                        label="Field Label"
+                                        value={stepField.label || ''}
+                                        onChange={(e) => {
+                                          const updatedFields = [...(step.fields || [])];
+                                          updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], label: e.target.value };
+                                          handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                        }}
+                                        fullWidth
+                                      />
+                                      
+                                      <TextField
+                                        size="small"
+                                        label="Field ID"
+                                        value={stepField.id || ''}
+                                        onChange={(e) => {
+                                          const updatedFields = [...(step.fields || [])];
+                                          updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], id: e.target.value };
+                                          handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                        }}
+                                        fullWidth
+                                        helperText="Unique identifier for this field"
+                                      />
+                                      
+                                      <TextField
+                                        size="small"
+                                        label="Placeholder"
+                                        value={stepField.placeholder || ''}
+                                        onChange={(e) => {
+                                          const updatedFields = [...(step.fields || [])];
+                                          updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], placeholder: e.target.value };
+                                          handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                        }}
+                                        fullWidth
+                                      />
+                                      
+                                      {/* Field Type Specific Properties */}
+                                      {(stepField.type === 'number' || stepField.type === 'textarea') && (
+                                        <>
+                                          <TextField
+                                            size="small"
+                                            label="Min Value"
+                                            type="number"
+                                            value={stepField.min || ''}
+                                            onChange={(e) => {
+                                              const updatedFields = [...(step.fields || [])];
+                                              updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], min: e.target.value };
+                                              handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                            }}
+                                            fullWidth
+                                          />
+                                          
+                                          <TextField
+                                            size="small"
+                                            label="Max Value"
+                                            type="number"
+                                            value={stepField.max || ''}
+                                            onChange={(e) => {
+                                              const updatedFields = [...(step.fields || [])];
+                                              updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], max: e.target.value };
+                                              handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                            }}
+                                            fullWidth
+                                          />
+                                        </>
+                                      )}
+                                      
+                                      {stepField.type === 'textarea' && (
+                                        <TextField
+                                          size="small"
+                                          label="Rows"
+                                          type="number"
+                                                                                      value={stepField.rows || 4}
+                                          onChange={(e) => {
+                                            const updatedFields = [...(step.fields || [])];
+                                            updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], rows: parseInt(e.target.value) || 4 };
+                                            handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                          }}
+                                          fullWidth
+                                          inputProps={{ min: 1, max: 20 }}
+                                        />
+                                      )}
+                                      
+                                      {(stepField.type === 'radio' || stepField.type === 'checkbox' || stepField.type === 'dropdown') && (
+                                        <TextField
+                                          size="small"
+                                          label="Options (comma-separated)"
+                                          value={stepField.options ? stepField.options.join(', ') : ''}
+                                          onChange={(e) => {
+                                            const options = e.target.value.split(',').map(opt => opt.trim()).filter(opt => opt);
+                                            const updatedFields = [...(step.fields || [])];
+                                            updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], options };
+                                            handleWizardStepChange(stepIndex, 'fields', updatedFields);
+                                          }}
+                                          fullWidth
+                                          helperText="Enter options separated by commas"
+                                        />
+                                      )}
+                                    </Stack>
+                                  </AccordionDetails>
+                                </Accordion>
+                              </Box>
+                            ))}
+                          </Stack>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                            No fields in this step. Click &quot;Add Field&quot; to get started.
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
                   ))}
                 </Stack>
