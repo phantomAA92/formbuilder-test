@@ -47,11 +47,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
 
   // Generate validation schema based on form fields
   const generateValidationSchema = (fields) => {
-    console.log('Generating validation schema for fields:', fields);
     const schemaObject = {};
     
     fields.forEach(field => {
-      console.log(`Processing field: ${field.id} (${field.type}) - required: ${field.required}`);
       
       // Handle wizard fields specially - include all step fields in the main schema
       if (field.type === 'wizard' && field.steps) {
@@ -72,14 +70,54 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               }
               
               switch (stepField.type) {
+                case 'text':
+                case 'textarea':
+                case 'link':
+                case 'richtext':
+                  fieldSchema = z.string();
+                  if (stepField.required) {
+                    fieldSchema = fieldSchema.min(1, `${stepField.label} is required`);
+                  }
+                  if (stepField.minLength) {
+                    fieldSchema = fieldSchema.min(stepField.minLength, `${stepField.label} must be at least ${stepField.minLength} characters`);
+                  }
+                  if (stepField.maxLength) {
+                    fieldSchema = fieldSchema.max(stepField.maxLength, `${stepField.label} must be no more than ${stepField.maxLength} characters`);
+                  }
+                  if (stepField.pattern) {
+                    fieldSchema = fieldSchema.regex(new RegExp(stepField.pattern), stepField.errorMessage || `${stepField.label} format is invalid`);
+                  }
+                  break;
                 case 'email':
                   fieldSchema = z.string().email('Invalid email format');
+                  if (stepField.required) {
+                    fieldSchema = fieldSchema.min(1, `${stepField.label} is required`);
+                  }
+                  if (stepField.minLength) {
+                    fieldSchema = fieldSchema.min(stepField.minLength, `${stepField.label} must be at least ${stepField.minLength} characters`);
+                  }
+                  if (stepField.maxLength) {
+                    fieldSchema = fieldSchema.max(stepField.maxLength, `${stepField.label} must be no more than ${stepField.maxLength} characters`);
+                  }
+                  if (stepField.pattern) {
+                    fieldSchema = fieldSchema.regex(new RegExp(stepField.pattern), stepField.errorMessage || `${stepField.label} format is invalid`);
+                  }
                   break;
                 case 'number':
                   fieldSchema = z.number().min(stepField.min || -Infinity).max(stepField.max || Infinity);
                   break;
                 case 'date':
-                  fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date');
+                  if (stepField.required) {
+                    fieldSchema = z.string().min(1, `${stepField.label} is required`);
+                  } else {
+                    fieldSchema = z.string().optional();
+                  }
+                  break;
+                case 'dropdown':
+                  fieldSchema = z.string();
+                  if (stepField.required) {
+                    fieldSchema = fieldSchema.min(1, `${stepField.label} is required`);
+                  }
                   break;
                 case 'checkbox':
                   if (stepField.required) {
@@ -109,6 +147,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                   break;
                 default:
                   fieldSchema = z.string();
+                  if (stepField.required) {
+                    fieldSchema = fieldSchema.min(1, `${stepField.label} is required`);
+                  }
               }
               
               if (!stepField.required) {
@@ -136,14 +177,54 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       }
       
       switch (field.type) {
+        case 'text':
+        case 'textarea':
+        case 'link':
+        case 'richtext':
+          fieldSchema = z.string();
+          if (field.required) {
+            fieldSchema = fieldSchema.min(1, `${field.label} is required`);
+          }
+          if (field.minLength) {
+            fieldSchema = fieldSchema.min(field.minLength, `${field.label} must be at least ${field.minLength} characters`);
+          }
+          if (field.maxLength) {
+            fieldSchema = fieldSchema.max(field.maxLength, `${field.label} must be no more than ${field.maxLength} characters`);
+          }
+          if (field.pattern) {
+            fieldSchema = fieldSchema.regex(new RegExp(field.pattern), field.errorMessage || `${field.label} format is invalid`);
+          }
+          break;
         case 'email':
           fieldSchema = z.string().email('Invalid email format');
+          if (field.required) {
+            fieldSchema = fieldSchema.min(1, `${field.label} is required`);
+          }
+          if (field.minLength) {
+            fieldSchema = fieldSchema.min(field.minLength, `${field.label} must be at least ${field.minLength} characters`);
+          }
+          if (field.maxLength) {
+            fieldSchema = fieldSchema.max(field.maxLength, `${field.label} must be no more than ${field.maxLength} characters`);
+          }
+          if (field.pattern) {
+            fieldSchema = fieldSchema.regex(new RegExp(field.pattern), field.errorMessage || `${field.label} format is invalid`);
+          }
           break;
         case 'number':
           fieldSchema = z.number().min(field.min || -Infinity).max(field.max || Infinity);
           break;
         case 'date':
-          fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date');
+          if (field.required) {
+            fieldSchema = z.string().min(1, `${field.label} is required`);
+          } else {
+            fieldSchema = z.string().optional();
+          }
+          break;
+        case 'dropdown':
+          fieldSchema = z.string();
+          if (field.required) {
+            fieldSchema = fieldSchema.min(1, `${field.label} is required`);
+          }
           break;
         case 'checkbox':
           if (field.required) {
@@ -161,7 +242,6 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
           // Handle file uploads - can be File, FileList, or null
           if (field.required) {
             fieldSchema = z.any().refine(val => {
-              console.log(`Validating ${field.id}:`, val, 'Type:', typeof val, 'Is File:', val instanceof File, 'Is FileList:', val instanceof FileList, 'Length:', val?.length);
               // Since onChange always passes FileList, we need to check if it has files
               if (val && val instanceof FileList) {
                 return val.length > 0;
@@ -178,6 +258,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
           break;
         default:
           fieldSchema = z.string();
+          if (field.required) {
+            fieldSchema = fieldSchema.min(1, `${field.label} is required`);
+          }
       }
       
       if (!field.required) {
@@ -190,8 +273,6 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
     return z.object(schemaObject);
   };
 
-
-
   const [validationSchema, setValidationSchema] = useState(() => generateValidationSchema(formData.fields || []));
   
   // Regenerate validation schema when formData changes
@@ -202,13 +283,26 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
   
   const methods = useForm({
     resolver: zodResolver(validationSchema),
-    defaultValues: formValues
+    defaultValues: formValues,
+    mode: 'onSubmit' // Only validate on form submission
   });
 
   const { handleSubmit, formState: { errors }, watch, setValue, trigger } = methods;
 
   const handleFormSubmit = async (data) => {
     try {
+      // Check if there are validation errors
+      if (Object.keys(errors).length > 0) {
+        console.log('Form has validation errors, cannot submit');
+        return;
+      }
+
+      // Check if form has fields
+      if (!formData.fields || formData.fields.length === 0) {
+        console.log('Form has no fields');
+        return;
+      }
+
       // Add signatures and table data to the form data
       const enrichedData = {
         ...data,
@@ -339,31 +433,33 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               </Typography>
             )}
 
-            <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
-              <Box sx={{ mb: 3 }}>
-                {formData.fields?.map((field) => (
-                  <Box key={field.id} sx={{ mb: 3 }}>
-                    {renderField(field)}
-                    {errors[field.id] && (
-                      <Alert severity="error" sx={{ mt: 1 }}>
-                        {errors[field.id].message}
-                      </Alert>
-                    )}
-                  </Box>
-                ))}
-              </Box>
+            <Box sx={{ mb: 3 }}>
+              {formData.fields?.map((field) => (
+                <Box key={field.id} sx={{ mb: 3 }}>
+                  {renderField(field)}
+                </Box>
+              ))}
+            </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  startIcon={isSubmitting ? <CircularProgress size={20} /> : <Save />}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                </Button>
-              </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={isSubmitting ? <CircularProgress size={20} /> : <Save />}
+                disabled={isSubmitting}
+                                  onClick={async () => {
+                    const fieldIds = formData.fields?.map(field => field.id) || [];
+                    const isValid = await trigger(fieldIds);
+                    
+                    if (isValid) {
+                      // If validation passes, submit the form
+                      const submittedData = methods.getValues();
+                      handleFormSubmit(submittedData);
+                    }
+                  }}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </Button>
             </Box>
           </Paper>
         </LocalizationProvider>
@@ -507,7 +603,23 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             disabled={field.disabled}
             error={!!errors[field.id]}
             helperText={errors[field.id]?.message}
-            sx={{ width: field.width || '100%' }}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
           />
         );
 
@@ -525,17 +637,75 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             disabled={field.disabled}
             error={!!errors[field.id]}
             helperText={errors[field.id]?.message}
-            sx={{ width: field.width || '100%' }}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
+          />
+        );
+
+      case 'email':
+        return (
+          <TextField
+            label={field.label}
+            type="email"
+            placeholder={field.placeholder}
+            value={watch(field.id) || ''}
+            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            fullWidth
+            required={field.required}
+            disabled={field.disabled}
+            error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
           />
         );
 
       case 'radio':
         return (
           <FormControl component="fieldset" required={field.required} error={!!errors[field.id]}>
-            <FormLabel component="legend">{field.label}</FormLabel>
+            <FormLabel component="legend" sx={{ color: errors[field.id] ? 'error.main' : undefined }}>
+              {field.label}
+            </FormLabel>
             <RadioGroup
               value={watch(field.id) || ''}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              sx={{
+                '& .MuiFormControlLabel-root': {
+                  '& .MuiRadio-root': {
+                    color: errors[field.id] ? 'error.main' : undefined
+                  }
+                }
+              }}
             >
               {(field.options || []).map((option, index) => (
                 <FormControlLabel
@@ -547,7 +717,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               ))}
             </RadioGroup>
             {errors[field.id] && (
-              <FormHelperText error>{errors[field.id].message}</FormHelperText>
+              <FormHelperText error sx={{ mt: 1, fontWeight: 500 }}>
+                {errors[field.id].message}
+              </FormHelperText>
             )}
           </FormControl>
         );
@@ -555,8 +727,16 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       case 'checkbox':
         return (
           <FormControl component="fieldset" required={field.required} error={!!errors[field.id]}>
-            <FormLabel component="legend">{field.label}</FormLabel>
-            <Box>
+            <FormLabel component="legend" sx={{ color: errors[field.id] ? 'error.main' : undefined }}>
+              {field.label}
+            </FormLabel>
+            <Box sx={{
+              '& .MuiFormControlLabel-root': {
+                '& .MuiCheckbox-root': {
+                  color: errors[field.id] ? 'error.main' : undefined
+                }
+              }
+            }}>
               {(field.options || []).map((option, index) => (
                 <FormControlLabel
                   key={index}
@@ -577,7 +757,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               ))}
             </Box>
             {errors[field.id] && (
-              <FormHelperText error>{errors[field.id].message}</FormHelperText>
+              <FormHelperText error sx={{ mt: 1, fontWeight: 500 }}>
+                {errors[field.id].message}
+              </FormHelperText>
             )}
           </FormControl>
         );
@@ -591,6 +773,18 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               label={field.label}
               disabled={field.disabled}
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: errors[field.id] ? 'error.main' : undefined,
+                  borderWidth: errors[field.id] ? '2px' : undefined
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: errors[field.id] ? 'error.main' : undefined
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: errors[field.id] ? 'error.main' : undefined
+                }
+              }}
             >
               {(field.options || []).map((option, index) => (
                 <MenuItem key={index} value={option}>
@@ -622,7 +816,23 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               max: field.max,
               step: field.step
             }}
-            sx={{ width: field.width || '100%' }}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
           />
         );
 
@@ -632,16 +842,31 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             label={field.label}
             value={watch(field.id) ? dayjs(watch(field.id)) : null}
             onChange={(date) => handleFieldChange(field.id, date ? date.toISOString() : '')}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                required={field.required}
-                disabled={field.disabled}
-                error={!!errors[field.id]}
-                helperText={errors[field.id]?.message}
-              />
-            )}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: field.required,
+                disabled: field.disabled,
+                error: !!errors[field.id],
+                helperText: errors[field.id]?.message,
+                sx: {
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-error': {
+                      '& fieldset': {
+                        borderColor: 'error.main',
+                        borderWidth: '2px'
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'error.main'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'error.main'
+                      }
+                    }
+                  }
+                }
+              }
+            }}
             minDate={field.minDate ? dayjs(field.minDate) : undefined}
             maxDate={field.maxDate ? dayjs(field.maxDate) : undefined}
           />
@@ -667,7 +892,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 sx={{
                   minHeight: 120,
                   border: '2px dashed',
-                  borderColor: 'grey.300',
+                  borderColor: errors[field.id] ? 'error.main' : 'grey.300',
                   borderRadius: 2,
                   display: 'flex',
                   alignItems: 'center',
@@ -675,12 +900,12 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                   color: 'text.secondary',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  backgroundColor: 'grey.50',
+                  backgroundColor: errors[field.id] ? 'error.50' : 'grey.50',
                   position: 'relative',
                   overflow: 'hidden',
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'primary.50',
+                    borderColor: errors[field.id] ? 'error.main' : 'primary.main',
+                    backgroundColor: errors[field.id] ? 'error.100' : 'primary.50',
                     transform: 'translateY(-1px)',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   },
@@ -759,6 +984,11 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 ))}
               </Box>
             )}
+            {errors[field.id] && (
+              <FormHelperText error sx={{ mt: 1 }}>
+                {errors[field.id].message}
+              </FormHelperText>
+            )}
           </Box>
         );
 
@@ -775,7 +1005,23 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             disabled={field.disabled}
             error={!!errors[field.id]}
             helperText={errors[field.id]?.message}
-            sx={{ width: field.width || '100%' }}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
           />
         );
 
@@ -785,7 +1031,14 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
               {field.label}
             </Typography>
-            <TableContainer component={Paper} variant="outlined">
+            <TableContainer 
+              component={Paper} 
+              variant="outlined"
+              sx={{
+                borderColor: errors[field.id] ? 'error.main' : undefined,
+                borderWidth: errors[field.id] ? '2px' : undefined
+              }}
+            >
               <Table>
                 <TableHead>
                   <TableRow>
@@ -824,6 +1077,11 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 </TableBody>
               </Table>
             </TableContainer>
+            {errors[field.id] && (
+              <FormHelperText error sx={{ mt: 1 }}>
+                {errors[field.id].message}
+              </FormHelperText>
+            )}
           </Box>
         );
 
@@ -841,7 +1099,23 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             disabled={field.disabled}
             error={!!errors[field.id]}
             helperText={errors[field.id]?.message}
-            sx={{ width: field.width || '100%' }}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
           />
         );
 
@@ -861,6 +1135,11 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               }}
               required={field.required}
             />
+            {errors[field.id] && (
+              <FormHelperText error sx={{ mt: 1 }}>
+                {errors[field.id].message}
+              </FormHelperText>
+            )}
           </Box>
         );
 

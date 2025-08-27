@@ -10,29 +10,24 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
-  Card,
-  Grid,
   Chip,
   Alert,
   Stack,
+  Table,
+  Paper,
   Button,
   Dialog,
-  Divider,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
   Typography,
   IconButton,
-  CardContent,
-  CardActions,
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
   TableContainer,
-  TableHead,
-  TableRow,
-  Paper
+  CircularProgress
 } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
@@ -61,7 +56,7 @@ export default function FormsList() {
         formsData = await FormService.getForms();
       }
       
-             // Sanitize and validate the forms data
+      // Sanitize and validate the forms data
       const sanitizedForms = (formsData || []).map(form => {
         try {
           // Ensure we have a safe form object with only primitive values
@@ -135,8 +130,6 @@ export default function FormsList() {
       setError('Failed to export form. Please try again.');
     }
   };
-
-
 
   const getFormTypeLabel = (type) => {
     switch (type) {

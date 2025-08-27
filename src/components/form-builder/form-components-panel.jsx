@@ -7,6 +7,7 @@ import {
   CalendarToday,
   CheckBox, 
   Description, 
+  Email,
   Link, 
   LooksOne, 
   RadioButtonChecked,
@@ -23,6 +24,7 @@ const ItemTypes = {
 
 const formComponents = [
   { type: 'text', label: 'Text Input', icon: TextFields, description: 'Single line text input' },
+  { type: 'email', label: 'Email Input', icon: Email, description: 'Email address input' },
   { type: 'textarea', label: 'Text Area', icon: Subject, description: 'Multi-line text input' },
   { type: 'radio', label: 'Radio Buttons', icon: RadioButtonChecked, description: 'Single choice selection' },
   { type: 'checkbox', label: 'Checkboxes', icon: CheckBox, description: 'Multiple choice selection' },
@@ -62,6 +64,8 @@ function DraggableComponent({ component, onAddField }) {
     switch (type) {
       case 'text':
         return { label: 'Text Input', placeholder: 'Enter text...', required: false };
+      case 'email':
+        return { label: 'Email Input', placeholder: 'Enter email address...', required: false };
       case 'textarea':
         return { label: 'Text Area', placeholder: 'Enter text...', rows: 4, required: false };
       case 'radio':
