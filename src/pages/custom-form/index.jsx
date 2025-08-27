@@ -54,7 +54,7 @@ export default function CustomFormPage() {
   };
 
   const handleUpdateField = (fieldId, updates) => {
-    if (fieldId === 'title' || fieldId === 'description') {
+    if (fieldId === 'title' || fieldId === 'description' || fieldId === 'gridColumns') {
       setFormData(prev => ({
         ...prev,
         [fieldId]: updates
@@ -182,7 +182,8 @@ export default function CustomFormPage() {
                 const previewData = {
                   ...formData,
                   title: formData.title || 'Form Preview',
-                  description: formData.description || ''
+                  description: formData.description || '',
+                  gridColumns: formData.gridColumns || 2
                 };
                 
                 // Ensure all field data is serializable

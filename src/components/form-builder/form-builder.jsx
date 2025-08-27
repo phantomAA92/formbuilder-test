@@ -158,7 +158,7 @@ export default function FormBuilder({
         type,
         label: defaultData?.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
         required: false,
-        position: position,
+        position,
         ...defaultData
       };
       
@@ -207,7 +207,7 @@ export default function FormBuilder({
         return;
       }
       
-      if (fieldId === 'title' || fieldId === 'description') {
+      if (fieldId === 'title' || fieldId === 'description' || fieldId === 'gridColumns') {
         onUpdateField && onUpdateField(fieldId, updates);
       } else if (fieldId === 'fields') {
         // Ensure fields is an array

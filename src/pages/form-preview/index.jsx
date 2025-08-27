@@ -31,6 +31,7 @@ export default function FormPreviewPage() {
             title: parsedData.title || 'Form Preview',
             description: parsedData.description || '',
             type: parsedData.type || 'custom',
+            gridColumns: parsedData.gridColumns || 2,
             fields: Array.isArray(parsedData.fields) ? parsedData.fields.map(field => ({
               ...field,
                              id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
