@@ -151,6 +151,29 @@ export default function DraggableField({
           </Box>
         );
 
+      case 'email':
+        return (
+          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              {field.label || 'Email Input'}
+            </Typography>
+            <Box
+              sx={{
+                height: 40,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 2,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'text.secondary'
+              }}
+            >
+              {field.placeholder || 'Enter email address...'}
+            </Box>
+          </Box>
+        );
+
       case 'textarea':
         return (
           <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
