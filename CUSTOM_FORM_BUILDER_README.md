@@ -1,6 +1,6 @@
 # Custom Form Builder
 
-A comprehensive React.js-based custom form builder that allows you to create, edit, and manage dynamic forms with drag-and-drop functionality.
+A comprehensive React.js-based custom form builder that allows you to create, edit, and manage dynamic forms with advanced grid layouts and drag-and-drop functionality.
 
 ## Features
 
@@ -8,6 +8,7 @@ A comprehensive React.js-based custom form builder that allows you to create, ed
 
 - **Text Input** - Single line text input
 - **Text Area** - Multi-line text input
+- **Email Input** - Email input with validation
 - **Radio Buttons** - Single choice selection
 - **Checkboxes** - Multiple choice selection
 - **Dropdown** - Select from options
@@ -22,7 +23,13 @@ A comprehensive React.js-based custom form builder that allows you to create, ed
 
 ### 🚀 Core Functionality
 
-- **Drag & Drop** - Intuitive drag-and-drop interface for building forms
+- **Advanced Grid Layout** - Multi-column grid system (1-4 columns) with configurable positioning
+- **Multiple Placement Strategies**:
+  - **Sequential Placement**: Click components for logical order placement (first at 0,0, then sequentially)
+  - **Random Placement**: Components placed at random grid positions
+  - **Precise Placement**: Drag and drop to exact grid coordinates
+- **Component Repositioning** - Move existing components anywhere within the grid layout
+- **Drag & Drop** - Intuitive drag-and-drop interface for building and repositioning forms
 - **Real-time Preview** - See form changes as you build
 - **Field Properties** - Comprehensive property editing for each field type
 - **Form Validation** - Built-in validation with custom error messages
@@ -64,20 +71,21 @@ npm run dev
 ```
 src/
 ├── components/form-builder/
-│   ├── enhanced-form-builder.jsx      # Main form builder component
-│   ├── form-components-panel.jsx      # Left panel with form components
-│   ├── form-content-panel.jsx         # Center panel for form content
-│   ├── enhanced-field-properties.jsx  # Right panel for field properties
-│   ├── draggable-field.jsx            # Draggable field component
-│   ├── enhanced-form-renderer.jsx     # Form rendering component
-│   └── forms-list.jsx                 # Forms list and management
+│   ├── form-builder.jsx              # Main form builder orchestrator
+│   ├── form-components-panel.jsx     # Left panel with form components
+│   ├── form-content-panel.jsx        # Center panel with grid layout
+│   ├── field-properties.jsx          # Right panel for field properties
+│   ├── draggable-field.jsx           # Draggable field wrapper
+│   ├── form-renderer.jsx             # Form rendering component
+│   └── index.jsx                     # Main form builder export
 ├── lib/
-│   ├── form-service.js                # API service for forms
-│   └── local-storage-service.js       # Local storage service (dev)
+│   ├── form-service.js               # API service for forms
+│   └── local-storage-service.js      # Local storage service (dev)
 └── pages/
-    ├── custom-form/                    # Form builder page
-    ├── form-view/                      # Form viewing page
-    └── forms-list/                     # Forms management page
+    ├── custom-form/                   # Form builder page
+    ├── form-preview/                  # Form preview page
+    ├── form-view/                     # Form viewing page
+    └── forms-list/                    # Forms management page
 ```
 
 ## Usage
@@ -85,30 +93,41 @@ src/
 ### 1. Creating a New Form
 
 1. Navigate to `/custom-form`
-2. Use the left panel to drag form components
-3. Drop components in the center content area
-4. Select fields to edit properties in the right panel
-5. Save your form
+2. **Configure Grid Layout**: Use the "Columns" dropdown to set 1-4 columns (default: 2)
+3. **Add Components** using three methods:
+   - **Click**: Click components in the left panel for sequential placement
+   - **Drag & Drop**: Drag components to specific grid cells for precise placement
+   - **Random**: Components can be placed at random positions
+4. **Reposition Components**: Drag existing components to new grid positions
+5. Select fields to edit properties in the right panel
+6. Save your form
 
 ### 2. Building Forms
 
 #### Adding Components
 
-- **Click** any component in the left panel to add it instantly
-- **Drag & Drop** components from left panel to content area
+- **Click** any component in the left panel to add it sequentially
+- **Drag & Drop** components from left panel to specific grid cells
+- **Random Placement** for dynamic layouts
 - Components automatically get unique IDs and default properties
+
+#### Grid Layout Management
+
+- **Column Configuration**: Change from 1-4 columns using the dropdown
+- **Component Positioning**: Each component stores its grid coordinates
+- **Visual Feedback**: Clear drop zones and drag indicators
+- **Responsive Design**: Grid adapts to different screen sizes
 
 #### Field Properties
 
 Each field type has specific properties:
 
 **Basic Properties:**
-
 - Label, ID, Placeholder, Required, Disabled
 
 **Type-Specific Properties:**
-
 - **Text/Textarea**: Rows, default value
+- **Email**: Email validation patterns
 - **Number**: Min, max, step values
 - **Date**: Min/max date constraints
 - **Options**: Add/remove options for radio/checkbox/dropdown
@@ -117,13 +136,11 @@ Each field type has specific properties:
 - **Signature**: Width, height, pen color
 
 **Validation Properties:**
-
 - Min/max length
 - Pattern (regex)
 - Custom error messages
 
 **Styling Properties:**
-
 - CSS classes
 - Width and height
 - Custom styling
@@ -162,6 +179,20 @@ Each field type has specific properties:
 - Support for complex field types (signatures, tables, files)
 
 ## Advanced Features
+
+### Grid Layout System
+
+#### Component Placement Strategies
+1. **Sequential Placement**: First component at (0,0), subsequent components follow logical order
+2. **Random Placement**: Components placed at random grid positions
+3. **Precise Placement**: Drag and drop to exact grid coordinates
+4. **Repositioning**: Move existing components anywhere in the grid
+
+#### Grid Configuration
+- **Column Count**: Configurable from 1-4 columns (default: 2)
+- **Responsive Layout**: Grid adapts to different screen sizes
+- **Visual Feedback**: Clear drop zones and drag indicators
+- **Position Preservation**: Component positions saved and restored
 
 ### Multi-Step Wizard Forms
 
@@ -215,8 +246,8 @@ In production, forms integrate with your backend API:
 #### Adding New Field Types
 
 1. Add component to `form-components-panel.jsx`
-2. Update `enhanced-field-properties.jsx` with properties
-3. Add rendering logic to `enhanced-form-renderer.jsx`
+2. Update `field-properties.jsx` with properties
+3. Add rendering logic to `form-renderer.jsx`
 4. Update validation schema
 
 #### Styling
@@ -255,12 +286,14 @@ POST   /api/forms/:id/reports  # Generate reports
   title: "Form Title",
   description: "Form description",
   type: "report|profile|custom",
+  gridColumns: 2, // Grid configuration
   fields: [
     {
       id: "field_1",
-      type: "text|textarea|radio|checkbox|dropdown|number|date|attachment|link|table|richtext|signature|wizard",
+      type: "text|textarea|email|radio|checkbox|dropdown|number|date|attachment|link|table|richtext|signature|wizard",
       label: "Field Label",
       required: false,
+      position: { row: 0, col: 0 }, // Grid position
       // ... type-specific properties
     }
   ],
@@ -277,12 +310,13 @@ POST   /api/forms/:id/reports  # Generate reports
 {
   title: "DMAS 301 Form",
   type: "report",
+  gridColumns: 2,
   fields: [
-    { type: "text", label: "Provider Name", required: true },
-    { type: "text", label: "Provider Number", required: true },
-    { type: "date", label: "Service Date", required: true },
-    { type: "textarea", label: "Service Description", required: true },
-    { type: "number", label: "Amount", required: true, min: 0 }
+    { type: "text", label: "Provider Name", required: true, position: { row: 0, col: 0 } },
+    { type: "text", label: "Provider Number", required: true, position: { row: 0, col: 1 } },
+    { type: "date", label: "Service Date", required: true, position: { row: 1, col: 0 } },
+    { type: "textarea", label: "Service Description", required: true, position: { row: 1, col: 1 } },
+    { type: "number", label: "Amount", required: true, min: 0, position: { row: 2, col: 0 } }
   ]
 }
 ```
@@ -293,12 +327,14 @@ POST   /api/forms/:id/reports  # Generate reports
 {
   title: "Client Profile",
   type: "profile",
+  gridColumns: 2,
   fields: [
-    { type: "text", label: "Full Name", required: true },
-    { type: "date", label: "Date of Birth", required: true },
-    { type: "textarea", label: "Address", required: true },
-    { type: "checkbox", label: "Allergies", options: ["Medication", "Food", "None"] },
-    { type: "signature", label: "Client Signature", required: true }
+    { type: "text", label: "Full Name", required: true, position: { row: 0, col: 0 } },
+    { type: "email", label: "Email Address", required: true, position: { row: 0, col: 1 } },
+    { type: "date", label: "Date of Birth", required: true, position: { row: 1, col: 0 } },
+    { type: "textarea", label: "Address", required: true, position: { row: 1, col: 1 } },
+    { type: "checkbox", label: "Allergies", options: ["Medication", "Food", "None"], position: { row: 2, col: 0 } },
+    { type: "signature", label: "Client Signature", required: true, position: { row: 2, col: 1 } }
   ]
 }
 ```
@@ -308,22 +344,24 @@ POST   /api/forms/:id/reports  # Generate reports
 ### Common Issues
 
 **Drag and Drop Not Working**
-
 - Ensure `react-dnd` is properly installed
 - Check browser compatibility
 - Verify drag event handlers
 
 **Forms Not Saving**
-
 - Check localStorage permissions
 - Verify form validation
 - Check console for errors
 
 **Field Properties Not Updating**
-
 - Ensure field selection
 - Check property change handlers
 - Verify state management
+
+**Grid Layout Issues**
+- Verify gridColumns setting is saved
+- Check component position data
+- Ensure preview page loads gridColumns
 
 ### Performance Tips
 
