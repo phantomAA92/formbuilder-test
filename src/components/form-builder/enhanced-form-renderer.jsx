@@ -120,6 +120,76 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     return z.object(schemaObject);
   };
 
+  // Generate validation schema for wizard step fields
+  const generateWizardStepValidationSchema = (stepFields) => {
+    console.log('Generating wizard step validation schema for fields:', stepFields);
+    const schemaObject = {};
+    
+    stepFields.forEach(field => {
+      console.log(`Processing wizard field: ${field.id} (${field.type}) - required: ${field.required}`);
+      let fieldSchema = z.any();
+      
+      if (field.required) {
+        fieldSchema = fieldSchema.refine(val => {
+          if (field.type === 'checkbox') {
+            return Array.isArray(val) && val.length > 0;
+          }
+          return val !== undefined && val !== null && val !== '';
+        }, {
+          message: `${field.label} is required`
+        });
+      }
+      
+      switch (field.type) {
+        case 'email':
+          fieldSchema = z.string().email('Invalid email format');
+          break;
+        case 'number':
+          fieldSchema = z.number().min(field.min || -Infinity).max(field.max || Infinity);
+          break;
+        case 'date':
+          fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date');
+          break;
+        case 'checkbox':
+          if (field.required) {
+            fieldSchema = z.array(z.string()).min(1, 'At least one option must be selected');
+          }
+          break;
+        case 'signature':
+          if (field.required) {
+            fieldSchema = fieldSchema.refine(val => val && val.length > 0, {
+              message: `${field.label} is required`
+            });
+          }
+          break;
+        case 'attachment':
+          if (field.required) {
+            fieldSchema = z.any().refine(val => {
+              if (val && val instanceof FileList) {
+                return val.length > 0;
+              }
+              return val && val !== null && val !== undefined;
+            }, {
+              message: `${field.label} is required`
+            });
+          } else {
+            fieldSchema = z.any().nullable();
+          }
+          break;
+        default:
+          fieldSchema = z.string();
+      }
+      
+      if (!field.required) {
+        fieldSchema = fieldSchema.optional();
+      }
+      
+      schemaObject[field.id] = fieldSchema;
+    });
+    
+    return z.object(schemaObject);
+  };
+
   const validationSchema = generateValidationSchema(formData.fields || []);
   
   const methods = useForm({
@@ -127,7 +197,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     defaultValues: formValues
   });
 
-  const { handleSubmit, formState: { errors }, watch, setValue } = methods;
+  const { handleSubmit, formState: { errors }, watch, setValue, trigger } = methods;
 
   const handleFormSubmit = async (data) => {
     try {
@@ -160,24 +230,67 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     setTableData(prev => ({ ...prev, [fieldId]: data }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const wizardField = formData.fields?.find(field => field.type === 'wizard');
     const steps = wizardField?.steps || [];
+    const currentStep = steps[activeStep];
     
-    if (activeStep === steps.length - 1) {
-      // This is the last step, show success message
-      setShowSuccess(true);
-      // Reset form after showing success
-      setTimeout(() => {
-        setShowSuccess(false);
-        setActiveStep(0);
-        setFormValues({});
-        setSignatures({});
-        setTableData({});
-        methods.reset();
-      }, 3000);
+    if (!currentStep) {
+      console.error('Current step not found');
+      return;
+    }
+
+    // Validate current step fields before proceeding
+    if (currentStep.fields && currentStep.fields.length > 0) {
+      const stepValidationSchema = generateWizardStepValidationSchema(currentStep.fields);
+      
+      try {
+        // Get current form values for the step fields
+        const stepFieldValues = {};
+        currentStep.fields.forEach(field => {
+          stepFieldValues[field.id] = watch(field.id);
+        });
+        
+        // Validate the step
+        await stepValidationSchema.parseAsync(stepFieldValues);
+        
+        // If validation passes, proceed to next step
+        if (activeStep === steps.length - 1) {
+          // This is the last step, show success message
+          setShowSuccess(true);
+          // Reset form after showing success
+          setTimeout(() => {
+            setShowSuccess(false);
+            setActiveStep(0);
+            setFormValues({});
+            setSignatures({});
+            setTableData({});
+            methods.reset();
+          }, 3000);
+        } else {
+          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+        }
+      } catch (validationError) {
+        console.error('Step validation failed:', validationError);
+        // Trigger form validation to show errors
+        await trigger(currentStep.fields.map(field => field.id));
+        return;
+      }
     } else {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      // No fields in current step, proceed without validation
+      if (activeStep === steps.length - 1) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setActiveStep(0);
+          setFormValues({});
+          setSignatures({});
+          setTableData({});
+          methods.reset();
+        }, 3000);
+      } else {
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      }
     }
   };
 
@@ -185,7 +298,22 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-
+  // Helper function to organize fields by columns
+  const organizeFieldsByColumns = (fields, columnCount) => {
+    const columns = Array.from({ length: columnCount }, () => []);
+    
+    fields.forEach(field => {
+      const columnIndex = field.column || 0;
+      if (columnIndex < columnCount) {
+        columns[columnIndex].push(field);
+      } else {
+        // If column index is out of bounds, put in first column
+        columns[0].push(field);
+      }
+    });
+    
+    return columns;
+  };
 
   // Check if form has wizard fields
   const hasWizard = formData.fields?.some(field => field.type === 'wizard');
@@ -302,17 +430,21 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                   {steps[activeStep].fields && steps[activeStep].fields.length > 0 ? (
                     <Box sx={{ 
                       display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gridTemplateColumns: `repeat(${steps[activeStep].columns || 1}, 1fr)`,
                       gap: 3
                     }}>
-                      {steps[activeStep].fields.map((field) => (
-                        <Box key={field.id}>
-                          {renderField(field)}
-                          {errors[field.id] && (
-                            <Alert severity="error" sx={{ mt: 1 }}>
-                              {errors[field.id].message}
-                            </Alert>
-                          )}
+                      {organizeFieldsByColumns(steps[activeStep].fields, steps[activeStep].columns || 1).map((columnFields, columnIndex) => (
+                        <Box key={columnIndex} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {columnFields.map((field) => (
+                            <Box key={field.id}>
+                              {renderField(field)}
+                              {errors[field.id] && (
+                                <Alert severity="error" sx={{ mt: 1 }}>
+                                  {errors[field.id].message}
+                                </Alert>
+                              )}
+                            </Box>
+                          ))}
                         </Box>
                       ))}
                     </Box>

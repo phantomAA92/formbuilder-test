@@ -620,18 +620,25 @@ export default function EnhancedFieldProperties({ field, onUpdate }) {
                             size="small"
                             variant="outlined"
                             onClick={() => {
-                              const newField = {
-                                id: `step_${stepIndex}_field_${Date.now()}`,
-                                type: 'text',
-                                label: 'New Field',
-                                required: false,
-                                column: 0
-                              };
-                              const updatedFields = [...(step.fields || []), newField];
+                              const columnCount = step.columns || 1;
+                              const newFields = [];
+                              
+                              // Add one field for each column
+                              for (let i = 0; i < columnCount; i++) {
+                                newFields.push({
+                                  id: `step_${stepIndex}_field_${Date.now()}_${i}`,
+                                  type: 'text',
+                                  label: `New Field ${i + 1}`,
+                                  required: false,
+                                  column: i
+                                });
+                              }
+                              
+                              const updatedFields = [...(step.fields || []), ...newFields];
                               handleWizardStepChange(stepIndex, 'fields', updatedFields);
                             }}
                           >
-                            Add Field
+                            Add Fields ({step.columns || 1} columns)
                           </Button>
                         </Box>
                         
