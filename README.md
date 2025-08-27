@@ -22,11 +22,7 @@ A comprehensive form builder and management system designed specifically for adu
 - **Service History**: Track all services provided to clients
 - **Assessment Forms**: Dynamic assessment forms using the custom form builder
 
-### 📊 DMAS Reports
-- **DMAS-301**: Service report generation with detailed service tracking
-- **DMAS-302**: Client assessment and care planning reports
-- **Report Templates**: Pre-built templates for common report types
-- **Export & Print**: Generate printable and exportable reports
+
 
 ### 🎯 Coordinator Management
 - **Case Management**: Assign and track care cases
@@ -47,7 +43,6 @@ src/
 ├── pages/
 │   ├── custom-form/            # Custom form builder page
 │   ├── caregiver/              # Caregiver management
-│   ├── reports/                # DMAS reports
 │   └── dashboard/              # Main dashboard
 └── routes/
     └── paths.js                # Application routing
@@ -103,12 +98,7 @@ npm run dev
    - References & Background
 3. Submit the registration
 
-### Generating DMAS Reports
 
-1. Navigate to **DMAS Reports** from the dashboard
-2. Choose between DMAS-301 (Service Report) or DMAS-302 (Assessment)
-3. Fill in the required information
-4. Generate and submit the report
 
 ## Form Field Types
 

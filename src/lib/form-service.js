@@ -130,23 +130,7 @@ export class FormService {
     }
   }
 
-  // Generate report from form data
-  static async generateReport(formId, reportType, options = {}) {
-    try {
-      if (USE_LOCAL_STORAGE) {
-        return LocalStorageService.generateReport(formId, reportType, options);
-      }
-      
-      const response = await axios.post(`${API_BASE_URL}/forms/${formId}/reports`, {
-        reportType,
-        options
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error generating report:', error);
-      throw error;
-    }
-  }
+
 
   // Clear all local storage data (development only)
   static clearLocalData() {
@@ -161,105 +145,6 @@ export class FormService {
 export const mockForms = [
   {
     id: '1',
-    title: 'DMAS 301 Form',
-    description: 'Virginia Department of Medical Assistance Services Form 301',
-    type: 'report',
-    fields: [
-      {
-        id: 'field_1',
-        type: 'text',
-        label: 'Provider Name',
-        required: true,
-        placeholder: 'Enter provider name'
-      },
-      {
-        id: 'field_2',
-        type: 'text',
-        label: 'Provider Number',
-        required: true,
-        placeholder: 'Enter provider number'
-      },
-      {
-        id: 'field_3',
-        type: 'date',
-        label: 'Service Date',
-        required: true
-      },
-      {
-        id: 'field_4',
-        type: 'text',
-        label: 'Client ID',
-        required: true,
-        placeholder: 'Enter client ID'
-      },
-      {
-        id: 'field_5',
-        type: 'textarea',
-        label: 'Service Description',
-        required: true,
-        placeholder: 'Describe the service provided',
-        rows: 4
-      },
-      {
-        id: 'field_6',
-        type: 'number',
-        label: 'Service Amount',
-        required: true,
-        placeholder: 'Enter amount',
-        min: 0,
-        step: 0.01
-      }
-    ],
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: '2',
-    title: 'DMAS 302 Form',
-    description: 'Virginia Department of Medical Assistance Services Form 302',
-    type: 'report',
-    fields: [
-      {
-        id: 'field_1',
-        type: 'text',
-        label: 'Client Name',
-        required: true,
-        placeholder: 'Enter client name'
-      },
-      {
-        id: 'field_2',
-        type: 'text',
-        label: 'Client ID',
-        required: true,
-        placeholder: 'Enter client ID'
-      },
-      {
-        id: 'field_3',
-        type: 'textarea',
-        label: 'Service Description',
-        required: true,
-        placeholder: 'Describe the service provided',
-        rows: 4
-      },
-      {
-        id: 'field_4',
-        type: 'dropdown',
-        label: 'Service Type',
-        required: true,
-        options: ['Medical', 'Dental', 'Vision', 'Mental Health', 'Other']
-      },
-      {
-        id: 'field_5',
-        type: 'date',
-        label: 'Service Date',
-        required: true
-      }
-    ],
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: '3',
     title: 'Client Profile Form',
     description: 'Comprehensive client information and assessment form',
     type: 'profile',

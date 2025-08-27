@@ -6,8 +6,7 @@ import {
   Edit,
   Delete,
   Download,
-  Visibility,
-  Assessment
+  Visibility
 } from '@mui/icons-material';
 import {
   Box,
@@ -131,25 +130,10 @@ export default function FormsList() {
     }
   };
 
-  const handleGenerateReport = async (formId, reportType) => {
-    try {
-      if (import.meta.env.MODE !== 'development') {
-        await FormService.generateReport(formId, reportType);
-        // Handle report display/download
-      } else {
-        // In development, just show a message
-        alert(`Report generation for ${reportType} is available in production mode`);
-      }
-    } catch (reportError) {
-      console.error('Error generating report:', String(reportError));
-      setError('Failed to generate report. Please try again.');
-    }
-  };
+
 
   const getFormTypeLabel = (type) => {
     switch (type) {
-      case 'report':
-        return 'Report Form';
       case 'profile':
         return 'Profile Form';
       case 'custom':
@@ -161,8 +145,6 @@ export default function FormsList() {
 
   const getFormTypeColor = (type) => {
     switch (type) {
-      case 'report':
-        return 'primary';
       case 'profile':
         return 'secondary';
       case 'custom':
@@ -316,15 +298,7 @@ export default function FormsList() {
                           <Download />
                         </IconButton>
                         
-                        {safeForm.type === 'report' && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleGenerateReport(safeForm.id, 'dmas')}
-                            title="Generate DMAS Report"
-                          >
-                            <Assessment />
-                          </IconButton>
-                        )}
+
                         
                         <IconButton
                           size="small"
@@ -382,7 +356,7 @@ export default function FormsList() {
             No forms created yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Start building your first custom form to create reports, profiles, and more.
+            Start building your first custom form to create profiles and more.
           </Typography>
           <Button
             variant="contained"

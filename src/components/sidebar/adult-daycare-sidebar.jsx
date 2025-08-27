@@ -6,7 +6,6 @@ import {
   Build,
   Close,
   Dashboard,
-  Description,
   ExpandLess,
   ExpandMore,
   Home,
@@ -59,27 +58,7 @@ const menuItems = [
       }
     ]
   },
-  {
-    title: 'Reports',
-    icon: Description,
-    path: null,
-    badge: null,
-    description: 'Generate and view reports',
-    children: [
-      {
-        title: 'DMAS 301',
-        icon: Description,
-        path: ADULT_DAYCARE_PATHS.reports.dmas301,
-        description: 'DMAS 301 Report Form'
-      },
-      {
-        title: 'DMAS 302',
-        icon: Description,
-        path: ADULT_DAYCARE_PATHS.reports.dmas302,
-        description: 'DMAS 302 Report Form'
-      }
-    ]
-  }
+
 ];
 
 export default function AdultDaycareSidebar({ open, onClose, variant }) {

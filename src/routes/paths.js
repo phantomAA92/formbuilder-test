@@ -13,10 +13,7 @@ export const ADULT_DAYCARE_PATHS = {
     list: '/caregiver/list',
     edit: '/caregiver/edit/:id'
   },
-  reports: {
-    dmas301: '/reports/dmas-301',
-    dmas302: '/reports/dmas-302'
-  },
+
   clients: {
     create: '/clients/create',
     list: '/clients/list',
