@@ -879,9 +879,10 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               {field.label}
               {field.required && <span style={{ color: 'error.main' }}> *</span>}
             </Typography>
+
             <input
               type="file"
-              multiple={field.multiple}
+              multiple
               accept={field.accept}
               onChange={(e) => handleFieldChange(field.id, e.target.files)}
               style={{ display: 'none' }}
@@ -951,16 +952,14 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                       Accepted: {field.accept}
                     </Typography>
                   )}
-                  {field.multiple && (
-                    <Typography variant="caption" sx={{ 
-                      display: 'block', 
-                      mt: 0.5,
-                      color: 'success.main',
-                      fontWeight: 500
-                    }}>
-                      ✓ Multiple files allowed
-                    </Typography>
-                  )}
+                  <Typography variant="caption" sx={{ 
+                    display: 'block', 
+                    mt: 0.5,
+                    color: 'success.main',
+                    fontWeight: 500
+                  }}>
+                    ✓ Multiple files allowed
+                  </Typography>
                 </Box>
               </Box>
             </label>

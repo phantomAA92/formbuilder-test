@@ -409,7 +409,8 @@ export const mockForms = [
         label: 'Supporting Documents',
         required: false,
         accept: '.pdf,.jpg,.png,.doc,.docx',
-        multiple: true
+        multiple: true,
+        maxSize: 10
       }
     ],
     createdAt: '2024-01-18T11:45:00Z',
