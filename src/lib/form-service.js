@@ -209,6 +209,276 @@ export const mockForms = [
     ],
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    title: 'Caregiver Registration',
+    description: 'Multi-step registration form for new caregivers',
+    type: 'custom',
+    fields: [
+      {
+        id: 'field_1',
+        type: 'text',
+        label: 'First Name',
+        required: true,
+        placeholder: 'Enter first name'
+      },
+      {
+        id: 'field_2',
+        type: 'text',
+        label: 'Last Name',
+        required: true,
+        placeholder: 'Enter last name'
+      },
+      {
+        id: 'field_3',
+        type: 'text',
+        label: 'Email Address',
+        required: true,
+        placeholder: 'Enter email address'
+      },
+      {
+        id: 'field_4',
+        type: 'text',
+        label: 'Phone Number',
+        required: true,
+        placeholder: 'Enter phone number'
+      },
+      {
+        id: 'field_5',
+        type: 'dropdown',
+        label: 'Experience Level',
+        required: true,
+        options: ['Beginner (0-1 years)', 'Intermediate (2-5 years)', 'Advanced (5+ years)']
+      },
+      {
+        id: 'field_6',
+        type: 'checkbox',
+        label: 'Certifications',
+        required: false,
+        options: ['CPR Certified', 'First Aid Certified', 'Nursing License', 'CNA License', 'Other']
+      },
+      {
+        id: 'field_7',
+        type: 'textarea',
+        label: 'Why do you want to be a caregiver?',
+        required: true,
+        placeholder: 'Please describe your motivation and goals',
+        rows: 4
+      },
+      {
+        id: 'field_8',
+        type: 'attachment',
+        label: 'Resume/CV',
+        required: true,
+        accept: '.pdf,.doc,.docx',
+        multiple: false
+      }
+    ],
+    createdAt: '2024-01-16T14:30:00Z',
+    updatedAt: '2024-01-16T14:30:00Z'
+  },
+  {
+    id: '3',
+    title: 'Daily Activity Log',
+    description: 'Track daily activities and client interactions',
+    type: 'custom',
+    fields: [
+      {
+        id: 'field_1',
+        type: 'date',
+        label: 'Date',
+        required: true
+      },
+      {
+        id: 'field_2',
+        type: 'text',
+        label: 'Client Name',
+        required: true,
+        placeholder: 'Enter client name'
+      },
+      {
+        id: 'field_3',
+        type: 'dropdown',
+        label: 'Activity Type',
+        required: true,
+        options: ['Personal Care', 'Meal Preparation', 'Medication Reminder', 'Exercise', 'Social Activity', 'Medical Appointment', 'Other']
+      },
+      {
+        id: 'field_4',
+        type: 'textarea',
+        label: 'Activity Description',
+        required: true,
+        placeholder: 'Describe the activity in detail',
+        rows: 4
+      },
+      {
+        id: 'field_5',
+        type: 'number',
+        label: 'Duration (minutes)',
+        required: true,
+        placeholder: 'Enter duration',
+        min: 1,
+        max: 480
+      },
+      {
+        id: 'field_6',
+        type: 'radio',
+        label: 'Client Mood',
+        required: true,
+        options: ['Excellent', 'Good', 'Fair', 'Poor']
+      },
+      {
+        id: 'field_7',
+        type: 'textarea',
+        label: 'Notes',
+        required: false,
+        placeholder: 'Additional notes or observations',
+        rows: 3
+      }
+    ],
+    createdAt: '2024-01-17T09:15:00Z',
+    updatedAt: '2024-01-17T09:15:00Z'
+  },
+  {
+    id: '4',
+    title: 'Incident Report Form',
+    description: 'Document and report incidents or accidents',
+    type: 'custom',
+    fields: [
+      {
+        id: 'field_1',
+        type: 'date',
+        label: 'Incident Date',
+        required: true
+      },
+      {
+        id: 'field_2',
+        type: 'text',
+        label: 'Time of Incident',
+        required: true,
+        placeholder: 'Enter time (e.g., 2:30 PM)'
+      },
+      {
+        id: 'field_3',
+        type: 'text',
+        label: 'Location',
+        required: true,
+        placeholder: 'Where did the incident occur?'
+      },
+      {
+        id: 'field_4',
+        type: 'text',
+        label: 'Person(s) Involved',
+        required: true,
+        placeholder: 'Names of people involved'
+      },
+      {
+        id: 'field_5',
+        type: 'textarea',
+        label: 'Description of Incident',
+        required: true,
+        placeholder: 'Provide a detailed description of what happened',
+        rows: 6
+      },
+      {
+        id: 'field_6',
+        type: 'dropdown',
+        label: 'Severity Level',
+        required: true,
+        options: ['Minor', 'Moderate', 'Major', 'Critical']
+      },
+      {
+        id: 'field_7',
+        type: 'checkbox',
+        label: 'Actions Taken',
+        required: true,
+        options: ['First Aid Administered', 'Medical Attention Sought', 'Family Notified', 'Supervisor Notified', 'Documentation Completed']
+      },
+      {
+        id: 'field_8',
+        type: 'textarea',
+        label: 'Preventive Measures',
+        required: false,
+        placeholder: 'What can be done to prevent similar incidents?',
+        rows: 4
+      },
+      {
+        id: 'field_9',
+        type: 'attachment',
+        label: 'Supporting Documents',
+        required: false,
+        accept: '.pdf,.jpg,.png,.doc,.docx',
+        multiple: true
+      }
+    ],
+    createdAt: '2024-01-18T11:45:00Z',
+    updatedAt: '2024-01-18T11:45:00Z'
+  },
+  {
+    id: '5',
+    title: 'Medication Management',
+    description: 'Track medication administration and schedules',
+    type: 'custom',
+    fields: [
+      {
+        id: 'field_1',
+        type: 'text',
+        label: 'Client Name',
+        required: true,
+        placeholder: 'Enter client name'
+      },
+      {
+        id: 'field_2',
+        type: 'text',
+        label: 'Medication Name',
+        required: true,
+        placeholder: 'Enter medication name'
+      },
+      {
+        id: 'field_3',
+        type: 'text',
+        label: 'Dosage',
+        required: true,
+        placeholder: 'Enter dosage (e.g., 10mg)'
+      },
+      {
+        id: 'field_4',
+        type: 'dropdown',
+        label: 'Frequency',
+        required: true,
+        options: ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'Other']
+      },
+      {
+        id: 'field_5',
+        type: 'date',
+        label: 'Start Date',
+        required: true
+      },
+      {
+        id: 'field_6',
+        type: 'date',
+        label: 'End Date',
+        required: false
+      },
+      {
+        id: 'field_7',
+        type: 'textarea',
+        label: 'Special Instructions',
+        required: false,
+        placeholder: 'Any special instructions or side effects to watch for',
+        rows: 3
+      },
+      {
+        id: 'field_8',
+        type: 'checkbox',
+        label: 'Administration Times',
+        required: true,
+        options: ['Morning', 'Afternoon', 'Evening', 'Bedtime']
+      }
+    ],
+    createdAt: '2024-01-19T16:20:00Z',
+    updatedAt: '2024-01-19T16:20:00Z'
   }
 ];
 

@@ -25,7 +25,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
@@ -55,35 +62,34 @@ export default function FormsList() {
       }
       
              // Sanitize and validate the forms data
-      //  const sanitizedForms = (formsData || []).map(form => {
-      //    try {
-      //      // Ensure we have a safe form object with only primitive values
-      //      const safeForm = {
-      //        id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
-      //        title: String(form?.title || 'Untitled Form'),
-      //        description: String(form?.description || ''),
-      //        type: String(form?.type || 'custom'),
-      //        fields: Array.isArray(form?.fields) ? form.fields : [],
-      //        createdAt: String(form?.createdAt || new Date().toISOString()),
-      //        updatedAt: String(form?.updatedAt || new Date().toISOString())
-      //      };
+      const sanitizedForms = (formsData || []).map(form => {
+        try {
+          // Ensure we have a safe form object with only primitive values
+          const safeForm = {
+            id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
+            title: String(form?.title || 'Untitled Form'),
+            description: String(form?.description || ''),
+            type: String(form?.type || 'custom'),
+            fields: Array.isArray(form?.fields) ? form.fields : [],
+            createdAt: String(form?.createdAt || new Date().toISOString()),
+            updatedAt: String(form?.updatedAt || new Date().toISOString())
+          };
            
-      //      return safeForm;
-      //    } catch (formError) {
-      //      console.warn('Error processing form:', String(formError));
-      //      // Return a safe fallback form
-      //      return {
-      //        id: `form_${Math.random().toString(36).substring(2, 11)}`,
-      //        title: 'Corrupted Form',
-      //        description: 'This form has corrupted data',
-      //        type: 'custom',
-      //        fields: [],
-      //        createdAt: new Date().toISOString(),
-      //        updatedAt: new Date().toISOString()
-      //      };
-      //    }
-      //  });
-      const sanitizedForms = []
+          return safeForm;
+        } catch (formError) {
+          console.warn('Error processing form:', String(formError));
+          // Return a safe fallback form
+          return {
+            id: `form_${Math.random().toString(36).substring(2, 11)}`,
+            title: 'Corrupted Form',
+            description: 'This form has corrupted data',
+            type: 'custom',
+            fields: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+        }
+      });
       
       setForms(sanitizedForms);
     } catch (loadError) {
@@ -187,169 +193,141 @@ export default function FormsList() {
         </Alert>
       )}
 
-      {/* Forms Grid */}
+      {/* Forms Table */}
       {forms.length > 0 ? (
-        <Grid container spacing={3}>
-          {forms.map((form) => {
-            try {
-                             // Ensure form has all required properties with safe string conversion
-               const safeForm = {
-                 id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
-                 title: String(form?.title || 'Untitled Form'),
-                 description: String(form?.description || ''),
-                 type: String(form?.type || 'custom'),
-                 fields: Array.isArray(form?.fields) ? form.fields : []
-               };
-              
-              return (
-                <Grid item xs={12} sm={6} md={4} key={safeForm.id}>
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <TableContainer component={Paper} sx={{ mt: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600 }}>Form Name</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Fields</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {forms.map((form) => {
+                try {
+                  // Ensure form has all required properties with safe string conversion
+                  const safeForm = {
+                    id: String(form?.id || `form_${Math.random().toString(36).substring(2, 11)}`),
+                    title: String(form?.title || 'Untitled Form'),
+                    description: String(form?.description || ''),
+                    type: String(form?.type || 'custom'),
+                    fields: Array.isArray(form?.fields) ? form.fields : [],
+                    createdAt: String(form?.createdAt || new Date().toISOString())
+                  };
+                  
+                  return (
+                    <TableRow key={safeForm.id} hover>
+                      <TableCell>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                          {safeForm.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
                         <Chip
                           label={getFormTypeLabel(safeForm.type)}
                           color={getFormTypeColor(safeForm.type)}
                           size="small"
                         />
-                        <Typography variant="caption" color="text.secondary">
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
+                          {safeForm.description || 'No description'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
                           {safeForm.fields.length || 0} fields
                         </Typography>
-                      </Box>
-                      
-                      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-                        {safeForm.title}
-                      </Typography>
-                      
-                      {safeForm.description && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {safeForm.description}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(safeForm.createdAt).toLocaleDateString()}
                         </Typography>
-                      )}
-                      
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {safeForm.fields.slice(0, 3).map((field, index) => {
-                          try {
-                            const fieldType = field?.type || 'unknown';
-                            return (
-                              <Chip
-                                key={`${safeForm.id}_field_${index}`}
-                                label={fieldType}
-                                size="small"
-                                variant="outlined"
-                                sx={{ textTransform: 'capitalize' }}
-                              />
-                            );
-                                                     } catch (fieldError) {
-                             console.warn('Error rendering field:', String(fieldError));
-                             return (
-                              <Chip
-                                key={`${safeForm.id}_field_${index}`}
-                                label="unknown"
-                                size="small"
-                                variant="outlined"
-                                sx={{ textTransform: 'capitalize' }}
-                              />
-                            );
-                          }
-                        })}
-                        {safeForm.fields.length > 3 && (
-                          <Chip
-                            label={`+${safeForm.fields.length - 3} more`}
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <IconButton
                             size="small"
+                            onClick={() => navigate(`/form-view/${safeForm.id}`)}
+                            color="primary"
+                            title="View Form"
+                          >
+                            <Visibility />
+                          </IconButton>
+                          
+                          <IconButton
+                            size="small"
+                            onClick={() => navigate(`/custom-form/${safeForm.id}`)}
+                            color="primary"
+                            title="Edit Form"
+                          >
+                            <Edit />
+                          </IconButton>
+                          
+                          <IconButton
+                            size="small"
+                            onClick={() => handleExportForm(safeForm.id, 'pdf')}
+                            color="primary"
+                            title="Export as PDF"
+                          >
+                            <Download />
+                          </IconButton>
+                          
+                          <IconButton
+                            size="small"
+                            onClick={() => setDeleteDialog({ open: true, form: safeForm })}
+                            color="error"
+                            title="Delete Form"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                } catch (formError) {
+                  console.error('Error rendering form:', String(formError));
+                  // Return a fallback row for corrupted forms
+                  return (
+                    <TableRow key={`error_${Math.random().toString(36).substring(2, 11)}`}>
+                      <TableCell colSpan={6}>
+                        <Box sx={{ textAlign: 'center', py: 2 }}>
+                          <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                            Corrupted Form
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            This form could not be displayed due to data corruption.
+                          </Typography>
+                          <Button
+                            size="small"
+                            color="error"
                             variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </CardContent>
-
-                    <Divider />
-                    
-                    <CardActions sx={{ p: 2, pt: 1 }}>
-                      <Stack direction="row" spacing={1} sx={{ flex: 1 }}>
-                        <Button
-                          size="small"
-                          startIcon={<Visibility />}
-                          onClick={() => navigate(`/form-view/${safeForm.id}`)}
-                          variant="outlined"
-                          sx={{ flex: 1 }}
-                        >
-                          View
-                        </Button>
-                        
-                        <Button
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => navigate(`/custom-form/${safeForm.id}`)}
-                          variant="outlined"
-                          sx={{ flex: 1 }}
-                        >
-                          Edit
-                        </Button>
-                      </Stack>
-                    </CardActions>
-
-                    <Box sx={{ p: 2, pt: 0 }}>
-                      <Stack direction="row" spacing={1} justifyContent="center">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleExportForm(safeForm.id, 'pdf')}
-                          title="Export as PDF"
-                        >
-                          <Download />
-                        </IconButton>
-                        
-
-                        
-                        <IconButton
-                          size="small"
-                          onClick={() => setDeleteDialog({ open: true, form: safeForm })}
-                          color="error"
-                          title="Delete Form"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Stack>
-                    </Box>
-                  </Card>
-                </Grid>
-              );
-                         } catch (formError) {
-               console.error('Error rendering form:', String(formError));
-               // Return a fallback card for corrupted forms
-              return (
-                                 <Grid item xs={12} sm={6} md={4} key={`error_${Math.random().toString(36).substring(2, 11)}`}>
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
-                      <Typography variant="h6" color="error" sx={{ mb: 1 }}>
-                        Corrupted Form
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        This form could not be displayed due to data corruption.
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ justifyContent: 'center' }}>
-                      <Button
-                        size="small"
-                        color="error"
-                        variant="outlined"
-                        onClick={() => {
-                          try {
-                            // Try to remove the corrupted form
-                            setForms(prev => prev.filter(f => f.id !== form.id));
-                                                     } catch (removeError) {
-                             console.error('Error removing corrupted form:', String(removeError));
-                           }
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              );
-            }
-          })}
-        </Grid>
+                            sx={{ ml: 2 }}
+                            onClick={() => {
+                              try {
+                                // Try to remove the corrupted form
+                                setForms(prev => prev.filter(f => f.id !== form.id));
+                              } catch (removeError) {
+                                console.error('Error removing corrupted form:', String(removeError));
+                              }
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
