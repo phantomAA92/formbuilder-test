@@ -315,6 +315,18 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     return columns;
   };
 
+  // Helper function to organize fields for preview (2 fields per row)
+  const organizeFieldsForPreview = (fields) => {
+    const rows = [];
+    
+    for (let i = 0; i < fields.length; i += 2) {
+      const row = fields.slice(i, i + 2);
+      rows.push(row);
+    }
+    
+    return rows;
+  };
+
   // Check if form has wizard fields
   const hasWizard = formData.fields?.some(field => field.type === 'wizard');
   
@@ -424,14 +436,14 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 {/* Step Fields with Column Layout */}
                 <Box sx={{ mb: 2 }}>
                   {steps[activeStep].fields && steps[activeStep].fields.length > 0 ? (
-                    <Box sx={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: `repeat(${steps[activeStep].columns || 1}, 1fr)`,
-                      gap: 3
-                    }}>
-                      {organizeFieldsByColumns(steps[activeStep].fields, steps[activeStep].columns || 1).map((columnFields, columnIndex) => (
-                        <Box key={columnIndex} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {columnFields.map((field) => (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {organizeFieldsForPreview(steps[activeStep].fields).map((rowFields, rowIndex) => (
+                        <Box key={rowIndex} sx={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(2, 1fr)',
+                          gap: 3
+                        }}>
+                          {rowFields.map((field) => (
                             <Box key={field.id}>
                               {renderField(field)}
                               {errors[field.id] && (
@@ -441,6 +453,14 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                               )}
                             </Box>
                           ))}
+                          {/* Fill empty space if odd number of fields */}
+                          {rowFields.length === 1 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Typography variant="body2" color="text.secondary">
+                                Empty
+                              </Typography>
+                            </Box>
+                          )}
                         </Box>
                       ))}
                     </Box>
