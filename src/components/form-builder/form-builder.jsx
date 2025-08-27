@@ -19,10 +19,10 @@ import {
 } from '@mui/material';
 
 import FormContentPanel from './form-content-panel';
+import FieldPropertiesPanel from './field-properties';
 import FormComponentsPanel from './form-components-panel';
-import FieldPropertiesPanel from './enhanced-field-properties';
 
-export default function EnhancedFormBuilder({
+export default function FormBuilder({
   formData,
   onUpdateField,
   onDeleteField,

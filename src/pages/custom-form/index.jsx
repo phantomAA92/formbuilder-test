@@ -5,7 +5,7 @@ import { Save, Preview, ArrowBack } from '@mui/icons-material';
 import { Box, Alert, Button, Container, Typography } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
-import EnhancedFormBuilder from '../../components/form-builder/enhanced-form-builder';
+import FormBuilder from '../../components/form-builder/form-builder';
 
 export default function CustomFormPage() {
   const { formId } = useParams();
@@ -247,8 +247,8 @@ export default function CustomFormPage() {
         </Alert>
       )}
       
-      {/* Enhanced Form Builder */}
-      <EnhancedFormBuilder
+      {/* Form Builder */}
+      <FormBuilder
         formData={formData}
         onUpdateField={handleUpdateField}
         onDeleteField={handleDeleteField}

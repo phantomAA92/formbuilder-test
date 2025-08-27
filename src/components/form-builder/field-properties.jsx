@@ -23,7 +23,7 @@ import {
   AccordionDetails
 } from '@mui/material';
 
-export default function EnhancedFieldProperties({ field, onUpdate }) {
+export default function FieldProperties({ field, onUpdate }) {
   const [localField, setLocalField] = useState(field);
 
   useEffect(() => {

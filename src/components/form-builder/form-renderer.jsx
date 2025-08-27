@@ -38,7 +38,7 @@ import {
   FormControlLabel
 } from '@mui/material';
 
-export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting = false }) {
+export default function FormRenderer({ formData, onSubmit, isSubmitting = false }) {
   const [activeStep, setActiveStep] = useState(0);
   const [formValues, setFormValues] = useState({});
   const [signatures, setSignatures] = useState({});

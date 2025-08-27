@@ -5,7 +5,7 @@ import { ArrowBack } from '@mui/icons-material';
 import { Box, Alert, Button, Container, Typography, CircularProgress } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
-import EnhancedFormRenderer from '../../components/form-builder/enhanced-form-renderer';
+import FormRenderer from '../../components/form-builder/form-renderer';
 
 export default function FormViewPage() {
   const { formId } = useParams();
@@ -158,7 +158,7 @@ export default function FormViewPage() {
       )}
 
       {/* Form Renderer */}
-      <EnhancedFormRenderer
+      <FormRenderer
         formData={formData}
         onSubmit={handleFormSubmit}
         isSubmitting={submitting}

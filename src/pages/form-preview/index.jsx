@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowBack } from '@mui/icons-material';
 import { Box, Alert, Button, Container, Typography, CircularProgress } from '@mui/material';
 
-import EnhancedFormRenderer from '../../components/form-builder/enhanced-form-renderer';
+import FormRenderer from '../../components/form-builder/form-renderer';
 
 export default function FormPreviewPage() {
   const navigate = useNavigate();
@@ -166,7 +166,7 @@ export default function FormPreviewPage() {
       )}
 
       {/* Form Renderer */}
-      <EnhancedFormRenderer
+      <FormRenderer
         formData={formData}
         onSubmit={handleFormSubmit}
         isSubmitting={submitting}
