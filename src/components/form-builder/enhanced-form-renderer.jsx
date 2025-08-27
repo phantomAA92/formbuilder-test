@@ -392,7 +392,24 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             <Stepper activeStep={activeStep} orientation="horizontal" sx={{ mb: 3 }}>
               {steps.map((step, index) => (
                 <Step key={index}>
-                  <StepLabel>{step.title}</StepLabel>
+                  <StepLabel>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {step.title}
+                      </Typography>
+                      {step.description && (
+                        <Typography variant="caption" color="text.secondary" sx={{ 
+                          display: 'block',
+                          maxWidth: 120,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {step.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  </StepLabel>
                 </Step>
               ))}
             </Stepper>
@@ -403,27 +420,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 <Typography variant="h6" sx={{ mb: 2 }}>
                   {steps[activeStep].title}
                 </Typography>
-                
-                {steps[activeStep].description && (
-                  <Box sx={{ 
-                    mb: 3, 
-                    p: 2, 
-                    bgcolor: 'primary.50', 
-                    borderRadius: 2, 
-                    border: '1px solid',
-                    borderColor: 'primary.200'
-                  }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ 
-                      lineHeight: 1.6,
-                      '&::before': {
-                        content: '"💡 "',
-                        mr: 1
-                      }
-                    }}>
-                      {steps[activeStep].description}
-                    </Typography>
-                  </Box>
-                )}
                 
                 {/* Step Fields with Column Layout */}
                 <Box sx={{ mb: 2 }}>
@@ -457,7 +453,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
               </Box>
             )}
             
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               {activeStep > 0 && (
                 <Button
                   onClick={handleBack}
