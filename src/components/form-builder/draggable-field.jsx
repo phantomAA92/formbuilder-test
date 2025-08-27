@@ -286,18 +286,53 @@ export default function DraggableField({
             </Typography>
             <Box
               sx={{
-                height: 60,
+                minHeight: 100,
                 border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 1,
+                borderColor: 'grey.300',
+                borderRadius: 2,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'text.secondary'
+                color: 'text.secondary',
+                backgroundColor: 'grey.50',
+                p: 2
               }}
             >
-              <AttachFile sx={{ mr: 1 }} />
-              Drop files here or click to browse
+              <Box sx={{ textAlign: 'center' }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    backgroundColor: 'primary.100',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 1
+                  }}
+                >
+                  <AttachFile sx={{ fontSize: 20, color: 'primary.main' }} />
+                </Box>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                  Drop files here or click to browse
+                </Typography>
+                {field.accept && (
+                  <Typography variant="caption" sx={{ 
+                    display: 'block', 
+                    mt: 0.5,
+                    color: 'text.secondary',
+                    backgroundColor: 'background.paper',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}>
+                    {field.accept}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
         );

@@ -3,9 +3,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import {
-  Save,
   Close,
-  Preview,
   Settings
 } from '@mui/icons-material';
 import {
@@ -13,7 +11,6 @@ import {
   Alert,
   Paper,
   Stack,
-  Button,
   Drawer,
   Snackbar,
   TextField,

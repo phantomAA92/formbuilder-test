@@ -11,16 +11,16 @@ import {
   Stack,
   Switch,
   Button,
+  Select,
+  MenuItem,
+  Checkbox,
   TextField,
   Accordion,
   Typography,
   IconButton,
   FormControlLabel,
   AccordionSummary,
-  AccordionDetails,
-  Select,
-  MenuItem,
-  Checkbox
+  AccordionDetails
 } from '@mui/material';
 
 export default function EnhancedFieldProperties({ field, onUpdate }) {
@@ -522,25 +522,6 @@ export default function EnhancedFieldProperties({ field, onUpdate }) {
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
-                <Box sx={{ 
-                  p: 2, 
-                  bgcolor: 'info.50', 
-                  borderRadius: 1, 
-                  border: '1px solid',
-                  borderColor: 'info.200'
-                }}>
-                  <Typography variant="body2" color="info.700" sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    '&::before': {
-                      content: '"💡 "',
-                      mr: 1
-                    }
-                  }}>
-                    <strong>Tip:</strong> Write clear, descriptive step descriptions to help users understand what information they need to provide in each step. Good descriptions improve user experience and reduce form abandonment.
-                  </Typography>
-                </Box>
-                
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle2">Steps</Typography>
                   <Button

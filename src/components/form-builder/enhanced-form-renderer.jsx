@@ -6,8 +6,8 @@ import { useForm, FormProvider } from 'react-hook-form';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Save, Clear, ArrowBack, ArrowForward } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { Save, Clear, ArrowBack, AttachFile, ArrowForward } from '@mui/icons-material';
 import {
   Box,
   Step,
@@ -32,6 +32,7 @@ import {
   RadioGroup,
   InputLabel,
   FormControl,
+  FormHelperText,
   TableContainer,
   CircularProgress,
   FormControlLabel
@@ -505,6 +506,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -522,6 +524,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -543,6 +546,9 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 />
               ))}
             </RadioGroup>
+            {errors[field.id] && (
+              <FormHelperText error>{errors[field.id].message}</FormHelperText>
+            )}
           </FormControl>
         );
 
@@ -570,6 +576,9 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 />
               ))}
             </Box>
+            {errors[field.id] && (
+              <FormHelperText error>{errors[field.id].message}</FormHelperText>
+            )}
           </FormControl>
         );
 
@@ -589,6 +598,9 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 </MenuItem>
               ))}
             </Select>
+            {errors[field.id] && (
+              <FormHelperText error>{errors[field.id].message}</FormHelperText>
+            )}
           </FormControl>
         );
 
@@ -604,6 +616,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
             inputProps={{
               min: field.min,
               max: field.max,
@@ -639,6 +652,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
           <Box>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
               {field.label}
+              {field.required && <span style={{ color: 'error.main' }}> *</span>}
             </Typography>
             <input
               type="file"
@@ -649,18 +663,98 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
               id={`file-${field.id}`}
             />
             <label htmlFor={`file-${field.id}`}>
-              <Button variant="outlined" component="span" fullWidth>
-                Choose Files
-              </Button>
+              <Box
+                sx={{
+                  minHeight: 120,
+                  border: '2px dashed',
+                  borderColor: 'grey.300',
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: 'grey.50',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'primary.50',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }
+                }}
+              >
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      backgroundColor: 'primary.100',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2
+                    }}
+                  >
+                    <AttachFile sx={{ fontSize: 24, color: 'primary.main' }} />
+                  </Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 1, color: 'text.primary' }}>
+                    Drop files here or click to browse
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                    Drag and drop your files here, or click to select files
+                  </Typography>
+                  {field.accept && (
+                    <Typography variant="caption" sx={{ 
+                      display: 'block', 
+                      color: 'text.secondary',
+                      backgroundColor: 'background.paper',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider'
+                    }}>
+                      Accepted: {field.accept}
+                    </Typography>
+                  )}
+                  {field.multiple && (
+                    <Typography variant="caption" sx={{ 
+                      display: 'block', 
+                      mt: 0.5,
+                      color: 'success.main',
+                      fontWeight: 500
+                    }}>
+                      ✓ Multiple files allowed
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </label>
-            {watch(field.id) && (
-              <Box sx={{ mt: 1 }}>
+            {watch(field.id) && watch(field.id).length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Selected Files:
+                </Typography>
                 {Array.from(watch(field.id)).map((file, index) => (
                   <Chip
                     key={index}
                     label={file.name}
-                    onDelete={() => handleFieldChange(field.id, null)}
+                    onDelete={() => {
+                      const currentFiles = Array.from(watch(field.id));
+                      const newFiles = currentFiles.filter((_, i) => i !== index);
+                      handleFieldChange(field.id, newFiles.length > 0 ? newFiles : null);
+                    }}
                     sx={{ mr: 1, mb: 1 }}
+                    variant="outlined"
                   />
                 ))}
               </Box>
@@ -680,6 +774,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -745,6 +840,7 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
