@@ -52,6 +52,76 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     
     fields.forEach(field => {
       console.log(`Processing field: ${field.id} (${field.type}) - required: ${field.required}`);
+      
+      // Handle wizard fields specially - include all step fields in the main schema
+      if (field.type === 'wizard' && field.steps) {
+        field.steps.forEach((step, stepIndex) => {
+          if (step.fields) {
+            step.fields.forEach(stepField => {
+              let fieldSchema = z.any();
+              
+              if (stepField.required) {
+                fieldSchema = fieldSchema.refine(val => {
+                  if (stepField.type === 'checkbox') {
+                    return Array.isArray(val) && val.length > 0;
+                  }
+                  return val !== undefined && val !== null && val !== '';
+                }, {
+                  message: `${stepField.label} is required`
+                });
+              }
+              
+              switch (stepField.type) {
+                case 'email':
+                  fieldSchema = z.string().email('Invalid email format');
+                  break;
+                case 'number':
+                  fieldSchema = z.number().min(stepField.min || -Infinity).max(stepField.max || Infinity);
+                  break;
+                case 'date':
+                  fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date');
+                  break;
+                case 'checkbox':
+                  if (stepField.required) {
+                    fieldSchema = z.array(z.string()).min(1, 'At least one option must be selected');
+                  }
+                  break;
+                case 'signature':
+                  if (stepField.required) {
+                    fieldSchema = fieldSchema.refine(val => val && val.length > 0, {
+                      message: `${stepField.label} is required`
+                    });
+                  }
+                  break;
+                case 'attachment':
+                  if (stepField.required) {
+                    fieldSchema = z.any().refine(val => {
+                      if (val && val instanceof FileList) {
+                        return val.length > 0;
+                      }
+                      return val && val !== null && val !== undefined;
+                    }, {
+                      message: `${stepField.label} is required`
+                    });
+                  } else {
+                    fieldSchema = z.any().nullable();
+                  }
+                  break;
+                default:
+                  fieldSchema = z.string();
+              }
+              
+              if (!stepField.required) {
+                fieldSchema = fieldSchema.optional();
+              }
+              
+              schemaObject[stepField.id] = fieldSchema;
+            });
+          }
+        });
+        return; // Skip the wizard field itself
+      }
+      
       let fieldSchema = z.any();
       
       if (field.required) {
@@ -120,77 +190,15 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
     return z.object(schemaObject);
   };
 
-  // Generate validation schema for wizard step fields
-  const generateWizardStepValidationSchema = (stepFields) => {
-    console.log('Generating wizard step validation schema for fields:', stepFields);
-    const schemaObject = {};
-    
-    stepFields.forEach(field => {
-      console.log(`Processing wizard field: ${field.id} (${field.type}) - required: ${field.required}`);
-      let fieldSchema = z.any();
-      
-      if (field.required) {
-        fieldSchema = fieldSchema.refine(val => {
-          if (field.type === 'checkbox') {
-            return Array.isArray(val) && val.length > 0;
-          }
-          return val !== undefined && val !== null && val !== '';
-        }, {
-          message: `${field.label} is required`
-        });
-      }
-      
-      switch (field.type) {
-        case 'email':
-          fieldSchema = z.string().email('Invalid email format');
-          break;
-        case 'number':
-          fieldSchema = z.number().min(field.min || -Infinity).max(field.max || Infinity);
-          break;
-        case 'date':
-          fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date');
-          break;
-        case 'checkbox':
-          if (field.required) {
-            fieldSchema = z.array(z.string()).min(1, 'At least one option must be selected');
-          }
-          break;
-        case 'signature':
-          if (field.required) {
-            fieldSchema = fieldSchema.refine(val => val && val.length > 0, {
-              message: `${field.label} is required`
-            });
-          }
-          break;
-        case 'attachment':
-          if (field.required) {
-            fieldSchema = z.any().refine(val => {
-              if (val && val instanceof FileList) {
-                return val.length > 0;
-              }
-              return val && val !== null && val !== undefined;
-            }, {
-              message: `${field.label} is required`
-            });
-          } else {
-            fieldSchema = z.any().nullable();
-          }
-          break;
-        default:
-          fieldSchema = z.string();
-      }
-      
-      if (!field.required) {
-        fieldSchema = fieldSchema.optional();
-      }
-      
-      schemaObject[field.id] = fieldSchema;
-    });
-    
-    return z.object(schemaObject);
-  };
 
-  const validationSchema = generateValidationSchema(formData.fields || []);
+
+  const [validationSchema, setValidationSchema] = useState(() => generateValidationSchema(formData.fields || []));
+  
+  // Regenerate validation schema when formData changes
+  useEffect(() => {
+    const newSchema = generateValidationSchema(formData.fields || []);
+    setValidationSchema(newSchema);
+  }, [formData.fields]);
   
   const methods = useForm({
     resolver: zodResolver(validationSchema),
@@ -242,38 +250,35 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
 
     // Validate current step fields before proceeding
     if (currentStep.fields && currentStep.fields.length > 0) {
-      const stepValidationSchema = generateWizardStepValidationSchema(currentStep.fields);
-      
       try {
-        // Get current form values for the step fields
-        const stepFieldValues = {};
-        currentStep.fields.forEach(field => {
-          stepFieldValues[field.id] = watch(field.id);
-        });
+        // Trigger validation for all current step fields
+        const fieldIds = currentStep.fields.map(field => field.id);
+        const isValid = await trigger(fieldIds);
         
-        // Validate the step
-        await stepValidationSchema.parseAsync(stepFieldValues);
-        
-        // If validation passes, proceed to next step
-        if (activeStep === steps.length - 1) {
-          // This is the last step, show success message
-          setShowSuccess(true);
-          // Reset form after showing success
-          setTimeout(() => {
-            setShowSuccess(false);
-            setActiveStep(0);
-            setFormValues({});
-            setSignatures({});
-            setTableData({});
-            methods.reset();
-          }, 3000);
+        if (isValid) {
+          // If validation passes, proceed to next step
+          if (activeStep === steps.length - 1) {
+            // This is the last step, show success message
+            setShowSuccess(true);
+            // Reset form after showing success
+            setTimeout(() => {
+              setShowSuccess(false);
+              setActiveStep(0);
+              setFormValues({});
+              setSignatures({});
+              setTableData({});
+              methods.reset();
+            }, 3000);
+          } else {
+            setActiveStep((prevActiveStep) => prevActiveStep + 1);
+          }
         } else {
-          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+          // Validation failed, errors will be displayed on the fields
+          console.log('Step validation failed - errors will be shown on fields');
+          return;
         }
       } catch (validationError) {
-        console.error('Step validation failed:', validationError);
-        // Trigger form validation to show errors
-        await trigger(currentStep.fields.map(field => field.id));
+        console.error('Step validation error:', validationError);
         return;
       }
     } else {
@@ -446,11 +451,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                           {rowFields.map((field) => (
                             <Box key={field.id}>
                               {renderField(field)}
-                              {errors[field.id] && (
-                                <Alert severity="error" sx={{ mt: 1 }}>
-                                  {errors[field.id].message}
-                                </Alert>
-                              )}
                             </Box>
                           ))}
                           {/* Fill empty space if odd number of fields */}
@@ -523,7 +523,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
-            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -541,7 +540,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
-            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -563,11 +561,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 />
               ))}
             </RadioGroup>
-            {errors[field.id] && (
-              <Typography color="error" variant="caption">
-                {errors[field.id].message}
-              </Typography>
-            )}
           </FormControl>
         );
 
@@ -595,11 +588,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 />
               ))}
             </Box>
-            {errors[field.id] && (
-              <Typography color="error" variant="caption">
-                {errors[field.id].message}
-              </Typography>
-            )}
           </FormControl>
         );
 
@@ -619,11 +607,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 </MenuItem>
               ))}
             </Select>
-            {errors[field.id] && (
-              <Typography color="error" variant="caption">
-                {errors[field.id].message}
-              </Typography>
-            )}
           </FormControl>
         );
 
@@ -639,7 +622,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
-            helperText={errors[field.id]?.message}
             inputProps={{
               min: field.min,
               max: field.max,
@@ -716,7 +698,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
-            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -766,11 +747,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
                 </TableBody>
               </Table>
             </TableContainer>
-            {errors[field.id] && (
-              <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                {errors[field.id].message}
-              </Typography>
-            )}
           </Box>
         );
 
@@ -787,7 +763,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
             required={field.required}
             disabled={field.disabled}
             error={!!errors[field.id]}
-            helperText={errors[field.id]?.message}
             sx={{ width: field.width || '100%' }}
           />
         );
@@ -808,11 +783,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
               }}
               required={field.required}
             />
-            {errors[field.id] && (
-              <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                {errors[field.id].message}
-              </Typography>
-            )}
           </Box>
         );
 
