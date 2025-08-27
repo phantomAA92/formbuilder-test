@@ -65,7 +65,7 @@ export default function DraggableField({
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.FIELD,
-    item: { type: ItemTypes.FIELD, index },
+    item: { type: ItemTypes.FIELD, index, fieldId: field.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),

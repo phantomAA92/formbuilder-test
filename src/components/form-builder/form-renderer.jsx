@@ -409,6 +409,32 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
     return rows;
   };
 
+  // Helper function to organize fields in grid layout based on position data
+  const organizeFieldsInGrid = (fields, gridColumns = 2) => {
+    const grid = [];
+    const maxRows = Math.max(10, Math.ceil(fields.length / gridColumns));
+    
+    // Initialize grid
+    for (let row = 0; row < maxRows; row++) {
+      grid[row] = [];
+      for (let col = 0; col < gridColumns; col++) {
+        grid[row][col] = null;
+      }
+    }
+    
+    // Place fields in their positions
+    fields.forEach(field => {
+      if (field.position) {
+        const { row, col } = field.position;
+        if (row < maxRows && col < gridColumns) {
+          grid[row][col] = field;
+        }
+      }
+    });
+    
+    return grid;
+  };
+
   // Check if form has wizard fields
   const hasWizard = formData.fields?.some(field => field.type === 'wizard');
   
@@ -434,11 +460,42 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             )}
 
             <Box sx={{ mb: 3 }}>
-              {formData.fields?.map((field) => (
-                <Box key={field.id} sx={{ mb: 3 }}>
-                  {renderField(field)}
-                </Box>
-              ))}
+              {(() => {
+                // Check if fields have position data
+                const hasPositionData = formData.fields?.some(field => field.position);
+                
+                if (hasPositionData) {
+                  // Use grid layout based on position data
+                  const gridColumns = formData.gridColumns || 2;
+                  const gridLayout = organizeFieldsInGrid(formData.fields, gridColumns);
+                  return (
+                    <Box sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                      gap: 3
+                    }}>
+                      {gridLayout.map((row, rowIndex) => 
+                        row.map((field, colIndex) => (
+                          <Box key={`${rowIndex}-${colIndex}`}>
+                            {field ? (
+                              <Box sx={{ mb: 3 }}>
+                                {renderField(field)}
+                              </Box>
+                            ) : null}
+                          </Box>
+                        ))
+                      )}
+                    </Box>
+                  );
+                } else {
+                  // Fallback to single column layout for backward compatibility
+                  return formData.fields?.map((field) => (
+                    <Box key={field.id} sx={{ mb: 3 }}>
+                      {renderField(field)}
+                    </Box>
+                  ));
+                }
+              })()}
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>

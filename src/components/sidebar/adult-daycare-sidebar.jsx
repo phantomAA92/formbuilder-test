@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 
 import {
-  AccountCircle,
+  Home,
   Build,
   Close,
+  ListAlt,
   Dashboard,
   ExpandLess,
   ExpandMore,
-  Home,
-  ListAlt,
+  AccountCircle,
   Notifications
 } from '@mui/icons-material';
 import {

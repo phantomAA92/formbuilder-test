@@ -73,6 +73,47 @@ export default function FormBuilder({
     onMoveField && onMoveField(fieldId, direction);
   };
 
+  // Helper function to generate random position within grid bounds
+  const generateRandomPosition = (existingFields, gridColumns = 2) => {
+    const maxRows = Math.max(10, Math.ceil((existingFields.length + 1) / gridColumns));
+    
+    // Create a set of occupied positions
+    const occupiedPositions = new Set();
+    existingFields.forEach(field => {
+      if (field.position) {
+        occupiedPositions.add(`${field.position.row}-${field.position.col}`);
+      }
+    });
+    
+    // Try to find a random unoccupied position
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    while (attempts < maxAttempts) {
+      const row = Math.floor(Math.random() * maxRows);
+      const col = Math.floor(Math.random() * gridColumns);
+      const positionKey = `${row}-${col}`;
+      
+      if (!occupiedPositions.has(positionKey)) {
+        return { row, col };
+      }
+      attempts++;
+    }
+    
+    // If no random position found, find the first available position
+    for (let row = 0; row < maxRows; row++) {
+      for (let col = 0; col < gridColumns; col++) {
+        const positionKey = `${row}-${col}`;
+        if (!occupiedPositions.has(positionKey)) {
+          return { row, col };
+        }
+      }
+    }
+    
+    // Fallback: add to the end
+    return { row: maxRows, col: 0 };
+  };
+
   const handleAddField = (type, defaultData) => {
     try {
       if (!type || typeof type !== 'string') {
@@ -80,19 +121,46 @@ export default function FormBuilder({
         return;
       }
       
-      const newField = {
-        id: `field_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-        type,
-        label: defaultData?.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
-        required: false,
-        ...defaultData
-      };
-      
       const currentFields = safeFormData.fields || [];
       if (!Array.isArray(currentFields)) {
         console.error('Fields is not an array:', typeof currentFields);
         return;
       }
+      
+      // Generate sequential position for the new field
+      // If no fields exist, place in first position (0,0)
+      // If fields exist, place after the last component
+      let position;
+      const gridColumns = safeFormData.gridColumns || 2; // Get current grid columns setting
+      
+      if (currentFields.length === 0) {
+        position = { row: 0, col: 0 };
+      } else {
+        // Find the last placed component and place after it
+        const lastField = currentFields[currentFields.length - 1];
+        if (lastField.position) {
+          const { row, col } = lastField.position;
+          if (col < gridColumns - 1) {
+            // Move to next column in same row
+            position = { row, col: col + 1 };
+          } else {
+            // Move to first column of next row
+            position = { row: row + 1, col: 0 };
+          }
+        } else {
+          // Fallback: place after the last field in sequence
+          position = { row: Math.floor(currentFields.length / gridColumns), col: currentFields.length % gridColumns };
+        }
+      }
+      
+      const newField = {
+        id: `field_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        type,
+        label: defaultData?.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
+        required: false,
+        position: position,
+        ...defaultData
+      };
       
       const updatedFields = [...currentFields, newField];
       onUpdateField && onUpdateField('fields', updatedFields);
