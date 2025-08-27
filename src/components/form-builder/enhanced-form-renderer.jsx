@@ -31,7 +31,6 @@ import {
   Typography,
   RadioGroup,
   InputLabel,
-  StepContent,
   FormControl,
   TableContainer,
   CircularProgress,
@@ -301,23 +300,6 @@ export default function EnhancedFormRenderer({ formData, onSubmit, isSubmitting 
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-
-  // Helper function to organize fields by columns
-  const organizeFieldsByColumns = (fields, columnCount) => {
-    const columns = Array.from({ length: columnCount }, () => []);
-    
-    fields.forEach(field => {
-      const columnIndex = field.column || 0;
-      if (columnIndex < columnCount) {
-        columns[columnIndex].push(field);
-      } else {
-        // If column index is out of bounds, put in first column
-        columns[0].push(field);
-      }
-    });
-    
-    return columns;
   };
 
   // Helper function to organize fields for preview (2 fields per row)

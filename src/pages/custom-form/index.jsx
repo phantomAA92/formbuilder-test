@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 
-import { Save, ArrowBack } from '@mui/icons-material';
+import { Save, Preview, ArrowBack } from '@mui/icons-material';
 import { Box, Alert, Button, Container, Typography } from '@mui/material';
 
 import FormService, { mockForms } from '../../lib/form-service';
@@ -171,6 +171,59 @@ export default function CustomFormPage() {
             onClick={() => navigate('/forms-list')}
           >
             Back to Forms
+          </Button>
+          
+          <Button
+            variant="outlined"
+            startIcon={<Preview />}
+            onClick={() => {
+              try {
+                // Create a temporary form data object for preview
+                const previewData = {
+                  ...formData,
+                  title: formData.title || 'Form Preview',
+                  description: formData.description || ''
+                };
+                
+                // Ensure all field data is serializable
+                const serializableData = {
+                  ...previewData,
+                  fields: (previewData.fields || []).map(field => {
+                    try {
+                      return {
+                        ...field,
+                        // Ensure any complex objects are converted to strings
+                        defaultValue: field.defaultValue ? String(field.defaultValue) : '',
+                        options: Array.isArray(field.options) ? field.options : [],
+                        columns: Array.isArray(field.columns) ? field.columns : [],
+                        steps: Array.isArray(field.steps) ? field.steps : []
+                      };
+                    } catch (fieldError) {
+                      console.warn('Error processing field:', fieldError, field);
+                      // Return a safe fallback field
+                      return {
+                        id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
+                        type: field.type || 'text',
+                        label: field.label || 'Field',
+                        required: false
+                      };
+                    }
+                  })
+                };
+                
+                // Store in sessionStorage for preview
+                sessionStorage.setItem('formPreviewData', JSON.stringify(serializableData));
+                
+                // Open preview in new tab
+                window.open('/form-preview', '_blank');
+              // eslint-disable-next-line no-shadow
+              } catch (error) {
+                console.error('Error preparing preview data:', String(error));
+                alert('Unable to preview form. Please try again.');
+              }
+            }}
+          >
+            Preview Form
           </Button>
           
           <Button

@@ -202,10 +202,6 @@ export default function EnhancedFormBuilder({
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
-            Custom Form Builder
-          </Typography>
-          
           {/* Form Title & Description */}
           <Paper sx={{ p: 3, mb: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -237,67 +233,7 @@ export default function EnhancedFormBuilder({
             <Typography variant="body2" color="text.secondary">
               {safeFormData.fields?.length || 0} form components
             </Typography>
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="outlined"
-                startIcon={<Preview />}
-                onClick={() => {
-                  try {
-                    // Create a temporary form data object for preview
-                    const previewData = {
-                      ...safeFormData,
-                      title: formTitle || safeFormData.title || 'Form Preview',
-                      description: formDescription || safeFormData.description || ''
-                    };
-                    
-                    // Ensure all field data is serializable
-                    const serializableData = {
-                      ...previewData,
-                      fields: (previewData.fields || []).map(field => {
-                        try {
-                          return {
-                            ...field,
-                            // Ensure any complex objects are converted to strings
-                            defaultValue: field.defaultValue ? String(field.defaultValue) : '',
-                            options: Array.isArray(field.options) ? field.options : [],
-                            columns: Array.isArray(field.columns) ? field.columns : [],
-                            steps: Array.isArray(field.steps) ? field.steps : []
-                          };
-                        } catch (fieldError) {
-                          console.warn('Error processing field:', fieldError, field);
-                          // Return a safe fallback field
-                          return {
-                            id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
-                            type: field.type || 'text',
-                            label: field.label || 'Field',
-                            required: false
-                          };
-                        }
-                      })
-                    };
-                    
-                    // Store in sessionStorage for preview
-                    sessionStorage.setItem('formPreviewData', JSON.stringify(serializableData));
-                    
-                    // Open preview in new tab
-                    window.open('/form-preview', '_blank');
-                  } catch (error) {
-                    console.error('Error preparing preview data:', String(error));
-                    alert('Unable to preview form. Please try again.');
-                  }
-                }}
-              >
-                Preview Form
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleSave}
-                startIcon={<Save />}
-                size="large"
-              >
-                Save Form
-              </Button>
-            </Stack>
+
           </Box>
         </Box>
 
