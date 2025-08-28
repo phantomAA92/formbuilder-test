@@ -149,13 +149,12 @@ function GridCell({
     <Box 
       ref={drop}
       sx={{ 
-        minHeight: 100,
         border: isOver ? '2px dashed' : '1px dashed',
         borderColor: isOver ? 'primary.main' : 'divider',
         borderRadius: 1,
         backgroundColor: isOver ? 'primary.light' : 'transparent',
         transition: 'all 0.2s ease',
-        p: 1
+        p: 0.5
       }}
     >
       {field ? (
@@ -172,7 +171,7 @@ function GridCell({
         />
       ) : (
         <Box sx={{ 
-          height: 100, 
+          minHeight: 80,
           border: '1px dashed', 
           borderColor: 'divider',
           borderRadius: 1,
@@ -227,7 +226,6 @@ export default function FormContentPanel({
 
   const handleGridColumnsChange = (event) => {
     const newColumns = event.target.value;
-    const oldColumns = gridColumns;
     setGridColumns(newColumns);
     
     // Reposition all fields when grid columns change
@@ -254,48 +252,6 @@ export default function FormContentPanel({
 
   const fields = formData.fields || [];
   
-  // Organize fields into grid layout
-  const organizeFieldsInGrid = (fieldList, columns = 2) => {
-    const grid = [];
-    const maxRows = Math.max(1, Math.ceil(fieldList.length / columns));
-    
-    // Initialize grid
-    for (let row = 0; row < maxRows; row++) {
-      grid[row] = [];
-      for (let col = 0; col < columns; col++) {
-        grid[row][col] = null;
-      }
-    }
-    
-    // Place fields in their positions
-    fieldList.forEach((field, index) => {
-      if (field.position) {
-        const { row, col } = field.position;
-        if (row < maxRows && col < columns) {
-          grid[row][col] = field;
-        } else {
-          // If position is invalid, calculate a fallback position
-          const fallbackRow = Math.floor(index / columns);
-          const fallbackCol = index % columns;
-          if (fallbackRow < maxRows && fallbackCol < columns) {
-            grid[fallbackRow][fallbackCol] = field;
-          }
-        }
-      } else {
-        // If no position exists, calculate based on index
-        const fallbackRow = Math.floor(index / columns);
-        const fallbackCol = index % columns;
-        if (fallbackRow < maxRows && fallbackCol < columns) {
-          grid[fallbackRow][fallbackCol] = field;
-        }
-      }
-    });
-    
-    return grid;
-  };
-  
-  const gridLayout = organizeFieldsInGrid(fields, gridColumns);
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -336,34 +292,44 @@ export default function FormContentPanel({
           borderRadius: 2,
           backgroundColor: 'action.hover',
           transition: 'all 0.2s ease',
-          p: 2,
+          p: 1,
           overflow: 'auto'
         }}
       >
         {fields.length > 0 ? (
           <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-            gap: 2,
-            minHeight: '100%'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1
           }}>
-            {gridLayout.map((row, rowIndex) => 
-              row.map((field, colIndex) => (
-                <GridCell
-                  key={`${rowIndex}-${colIndex}`}
-                  row={rowIndex}
-                  col={colIndex}
-                  field={field}
-                  fields={fields}
-                  selectedField={selectedField}
-                  onFieldSelect={handleFieldSelect}
-                  onFieldDelete={handleFieldDelete}
-                  onFieldMove={handleFieldMove}
-                  onFieldReorder={handleFieldReorder}
-                  onFieldUpdate={onFieldUpdate}
-                />
-              ))
-            )}
+            {Array.from({ length: Math.max(Math.ceil((fields.length + 2) / gridColumns), 3) }, (rowItem, rowIndex) => (
+              <Box key={rowIndex} sx={{ 
+                display: 'flex', 
+                gap: 1 
+              }}>
+                {Array.from({ length: gridColumns }, (colItem, colIndex) => {
+                  const fieldIndex = rowIndex * gridColumns + colIndex;
+                  const field = fields[fieldIndex];
+                  
+                  return (
+                    <Box key={colIndex} sx={{ flex: 1, minWidth: 200 }}>
+                      <GridCell
+                        row={rowIndex}
+                        col={colIndex}
+                        field={field}
+                        fields={fields}
+                        selectedField={selectedField}
+                        onFieldSelect={handleFieldSelect}
+                        onFieldDelete={handleFieldDelete}
+                        onFieldMove={handleFieldMove}
+                        onFieldReorder={handleFieldReorder}
+                        onFieldUpdate={onFieldUpdate}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
           </Box>
         ) : (
           <EmptyDropZone 

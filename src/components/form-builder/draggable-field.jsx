@@ -130,20 +130,21 @@ export default function DraggableField({
     switch (field.type) {
       case 'text':
         return (
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
               {field.label || 'Text Input'}
             </Typography>
             <Box
               sx={{
-                height: 40,
+                height: 32,
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1,
-                px: 2,
+                px: 1,
                 display: 'flex',
                 alignItems: 'center',
-                color: 'text.secondary'
+                color: 'text.secondary',
+                fontSize: '0.75rem'
               }}
             >
               {field.placeholder || 'Enter text...'}
@@ -153,20 +154,21 @@ export default function DraggableField({
 
       case 'email':
         return (
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
               {field.label || 'Email Input'}
             </Typography>
             <Box
               sx={{
-                height: 40,
+                height: 32,
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1,
-                px: 2,
+                px: 1,
                 display: 'flex',
                 alignItems: 'center',
-                color: 'text.secondary'
+                color: 'text.secondary',
+                fontSize: '0.75rem'
               }}
             >
               {field.placeholder || 'Enter email address...'}
@@ -176,19 +178,20 @@ export default function DraggableField({
 
       case 'textarea':
         return (
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
               {field.label || 'Text Area'}
             </Typography>
             <Box
               sx={{
-                height: (field.rows || 4) * 20,
+                height: Math.min((field.rows || 3) * 16, 48),
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1,
-                px: 2,
-                py: 1,
-                color: 'text.secondary'
+                px: 1,
+                py: 0.5,
+                color: 'text.secondary',
+                fontSize: '0.75rem'
               }}
             >
               {field.placeholder || 'Enter text...'}
@@ -476,8 +479,8 @@ export default function DraggableField({
 
       default:
         return (
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
               Unknown field type: {field.type}
             </Typography>
           </Box>
@@ -490,7 +493,7 @@ export default function DraggableField({
       <Paper
         ref={drag}
         sx={{
-          p: 2,
+          p: 1,
           cursor: 'grab',
           opacity: isDragging ? 0.5 : 1,
           border: '2px solid',
@@ -502,18 +505,18 @@ export default function DraggableField({
         onClick={handleSelect}
       >
         {/* Field Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <DragIndicator sx={{ color: 'text.secondary', cursor: 'grab' }} />
-            <FieldIcon sx={{ color: 'primary.main' }} />
-            <Typography variant="subtitle2" fontWeight={500}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <DragIndicator sx={{ color: 'text.secondary', cursor: 'grab', fontSize: 16 }} />
+            <FieldIcon sx={{ color: 'primary.main', fontSize: 16 }} />
+            <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.875rem' }}>
               {field.label || 'Untitled Field'}
             </Typography>
             <Chip 
               label={field.type} 
               size="small" 
               variant="outlined" 
-              sx={{ textTransform: 'capitalize' }}
+              sx={{ textTransform: 'capitalize', fontSize: '0.65rem', height: 16 }}
             />
             {field.required && (
               <Chip 
@@ -521,38 +524,40 @@ export default function DraggableField({
                 size="small" 
                 color="error" 
                 variant="outlined"
+                sx={{ fontSize: '0.65rem', height: 16 }}
               />
             )}
           </Box>
           
-          <Stack direction="row" spacing={0.5}>
+          <Stack direction="row" spacing={0.25}>
             <IconButton
               size="small"
               onClick={handleMoveUp}
               disabled={!canMoveUp}
-              sx={{ opacity: canMoveUp ? 1 : 0.3 }}
+              sx={{ opacity: canMoveUp ? 1 : 0.3, padding: 0.5 }}
             >
-              <KeyboardArrowUp />
+              <KeyboardArrowUp sx={{ fontSize: 16 }} />
             </IconButton>
             <IconButton
               size="small"
               onClick={handleMoveDown}
               disabled={!canMoveDown}
-              sx={{ opacity: canMoveDown ? 1 : 0.3 }}
+              sx={{ opacity: canMoveDown ? 1 : 0.3, padding: 0.5 }}
             >
-              <KeyboardArrowDown />
+              <KeyboardArrowDown sx={{ fontSize: 16 }} />
             </IconButton>
             <IconButton
               size="small"
               onClick={handleDelete}
               color="error"
+              sx={{ padding: 0.5 }}
             >
-              <Delete />
+              <Delete sx={{ fontSize: 16 }} />
             </IconButton>
           </Stack>
         </Box>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 1 }} />
 
         {/* Field Preview */}
         {renderFieldPreview()}

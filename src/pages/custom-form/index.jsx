@@ -27,6 +27,14 @@ export default function CustomFormPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId]);
 
+  // Update sessionStorage whenever formData changes
+  useEffect(() => {
+    if (formData && formData.fields) {
+      // Update sessionStorage for preview
+      sessionStorage.setItem('formPreviewData', JSON.stringify(formData));
+    }
+  }, [formData]);
+
   const loadExistingForm = async () => {
     try {
       setLoading(true);
@@ -60,10 +68,22 @@ export default function CustomFormPage() {
         [fieldId]: updates
       }));
     } else if (fieldId === 'fields') {
-      setFormData(prev => ({
-        ...prev,
-        fields: updates
-      }));
+      setFormData(prev => {
+        // Update position values to reflect the new array order
+        const gridColumns = prev.gridColumns || 2;
+        const updatedFields = updates.map((field, index) => ({
+          ...field,
+          position: {
+            row: Math.floor(index / gridColumns),
+            col: index % gridColumns
+          }
+        }));
+        
+        return {
+          ...prev,
+          fields: updatedFields
+        };
+      });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -75,10 +95,24 @@ export default function CustomFormPage() {
   };
 
   const handleDeleteField = (fieldId) => {
-    setFormData(prev => ({
-      ...prev,
-      fields: prev.fields.filter(field => field.id !== fieldId)
-    }));
+    setFormData(prev => {
+      const remainingFields = prev.fields.filter(field => field.id !== fieldId);
+      
+      // Update position values to reflect the new array order after deletion
+      const gridColumns = prev.gridColumns || 2;
+      const updatedFields = remainingFields.map((field, index) => ({
+        ...field,
+        position: {
+          row: Math.floor(index / gridColumns),
+          col: index % gridColumns
+        }
+      }));
+      
+      return {
+        ...prev,
+        fields: updatedFields
+      };
+    });
     if (selectedField?.id === fieldId) {
       setSelectedField(null);
     }
@@ -95,7 +129,17 @@ export default function CustomFormPage() {
         [fields[currentIndex], fields[currentIndex + 1]] = [fields[currentIndex + 1], fields[currentIndex]];
       }
       
-      return { ...prev, fields };
+      // Update position values to reflect the new array order
+      const gridColumns = prev.gridColumns || 2;
+      const updatedFields = fields.map((field, index) => ({
+        ...field,
+        position: {
+          row: Math.floor(index / gridColumns),
+          col: index % gridColumns
+        }
+      }));
+      
+      return { ...prev, fields: updatedFields };
     });
   };
 
@@ -257,6 +301,19 @@ export default function CustomFormPage() {
         onSelectField={setSelectedField}
         selectedField={selectedField}
         onSave={handleSaveForm}
+        onFieldReorder={(dragIndex, hoverIndex) => {
+          // Handle field reordering and update sessionStorage
+          const fields = [...formData.fields];
+          const draggedField = fields[dragIndex];
+          fields.splice(dragIndex, 1);
+          fields.splice(hoverIndex, 0, draggedField);
+
+          const newFormData = { ...formData, fields };
+          setFormData(newFormData);
+
+          // Update sessionStorage immediately
+          sessionStorage.setItem('formPreviewData', JSON.stringify(newFormData));
+        }}
       />
     </Container>
   );

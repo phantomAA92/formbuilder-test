@@ -287,7 +287,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
     mode: 'onSubmit' // Only validate on form submission
   });
 
-  const { handleSubmit, formState: { errors }, watch, setValue, trigger } = methods;
+  const { formState: { errors }, watch, setValue, trigger } = methods;
 
   const handleFormSubmit = async (data) => {
     try {
@@ -432,6 +432,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       }
     });
     
+    console.log('✌️grid --->', grid);
     return grid;
   };
 
@@ -443,7 +444,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
   }
 
   return renderStandardForm();
-
+  
   function renderStandardForm() {
     return (
       <FormProvider {...methods}>

@@ -43,6 +43,7 @@ export default function FormBuilder({
   const [formDescription, setFormDescription] = useState(formData?.description || '');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [errorMessage, setErrorMessage] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -71,47 +72,6 @@ export default function FormBuilder({
 
   const handleFieldMove = (fieldId, direction) => {
     onMoveField && onMoveField(fieldId, direction);
-  };
-
-  // Helper function to generate random position within grid bounds
-  const generateRandomPosition = (existingFields, gridColumns = 2) => {
-    const maxRows = Math.max(10, Math.ceil((existingFields.length + 1) / gridColumns));
-    
-    // Create a set of occupied positions
-    const occupiedPositions = new Set();
-    existingFields.forEach(field => {
-      if (field.position) {
-        occupiedPositions.add(`${field.position.row}-${field.position.col}`);
-      }
-    });
-    
-    // Try to find a random unoccupied position
-    let attempts = 0;
-    const maxAttempts = 100;
-    
-    while (attempts < maxAttempts) {
-      const row = Math.floor(Math.random() * maxRows);
-      const col = Math.floor(Math.random() * gridColumns);
-      const positionKey = `${row}-${col}`;
-      
-      if (!occupiedPositions.has(positionKey)) {
-        return { row, col };
-      }
-      attempts++;
-    }
-    
-    // If no random position found, find the first available position
-    for (let row = 0; row < maxRows; row++) {
-      for (let col = 0; col < gridColumns; col++) {
-        const positionKey = `${row}-${col}`;
-        if (!occupiedPositions.has(positionKey)) {
-          return { row, col };
-        }
-      }
-    }
-    
-    // Fallback: add to the end
-    return { row: maxRows, col: 0 };
   };
 
   const handleAddField = (type, defaultData) => {
@@ -194,11 +154,21 @@ export default function FormBuilder({
       fields.splice(dragIndex, 1);
       fields.splice(hoverIndex, 0, draggedField);
       
-      onUpdateField && onUpdateField('fields', fields);
+      // Update position values to reflect the new array order
+      const gridColumns = safeFormData.gridColumns || 2;
+      const updatedFields = fields.map((field, index) => ({
+        ...field,
+        position: {
+          row: Math.floor(index / gridColumns),
+          col: index % gridColumns
+        }
+      }));
+      
+      onUpdateField && onUpdateField('fields', updatedFields);
     } catch (error) {
       console.error('Error reordering fields:', String(error));
     }
-  }, [safeFormData.fields, onUpdateField]);
+  }, [safeFormData.fields, safeFormData.gridColumns, onUpdateField]);
 
   const handleFieldUpdate = (fieldId, updates) => {
     try {
@@ -227,33 +197,6 @@ export default function FormBuilder({
       }
     } catch (error) {
       console.error('Error updating field:', String(error));
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      if (!formTitle || !formTitle.trim()) {
-        setErrorMessage('Form title is required');
-        setShowError(true);
-        return;
-      }
-      
-      const currentFields = safeFormData.fields || [];
-      if (!Array.isArray(currentFields) || currentFields.length === 0) {
-        setErrorMessage('Form must have at least one field');
-        setShowError(true);
-        return;
-      }
-      
-      if (onSave) {
-        await onSave();
-        setShowSuccess(true);
-        setShowError(false);
-      }
-    } catch (error) {
-      console.error('Error saving form:', String(error));
-      setErrorMessage('Failed to save form. Please try again.');
-      setShowError(true);
     }
   };
 
