@@ -208,7 +208,7 @@ export default function CustomFormPage() {
         }
       }
       
-      return { ...prev, fields: fields };
+      return { ...prev, fields };
     });
   };
 

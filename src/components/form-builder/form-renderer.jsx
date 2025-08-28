@@ -45,6 +45,8 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
   const [tableData, setTableData] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
 
+
+
   // Generate validation schema based on form fields
   const generateValidationSchema = (fields) => {
     const schemaObject = {};
@@ -432,7 +434,6 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       }
     });
     
-    console.log('✌️grid --->', grid);
     return grid;
   };
 
