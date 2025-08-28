@@ -150,25 +150,24 @@ export default function FormBuilder({
       
       const fields = [...currentFields];
       const draggedField = fields[dragIndex];
+      const targetField = fields[hoverIndex];
       
+      // Swap positions between the dragged field and target field
+      if (draggedField.position && targetField.position) {
+        const tempPosition = draggedField.position;
+        draggedField.position = targetField.position;
+        targetField.position = tempPosition;
+      }
+      
+      // Swap array positions
       fields.splice(dragIndex, 1);
       fields.splice(hoverIndex, 0, draggedField);
       
-      // Update position values to reflect the new array order
-      const gridColumns = safeFormData.gridColumns || 2;
-      const updatedFields = fields.map((field, index) => ({
-        ...field,
-        position: {
-          row: Math.floor(index / gridColumns),
-          col: index % gridColumns
-        }
-      }));
-      
-      onUpdateField && onUpdateField('fields', updatedFields);
+      onUpdateField && onUpdateField('fields', fields);
     } catch (error) {
       console.error('Error reordering fields:', String(error));
     }
-  }, [safeFormData.fields, safeFormData.gridColumns, onUpdateField]);
+  }, [safeFormData.fields, onUpdateField]);
 
   const handleFieldUpdate = (fieldId, updates) => {
     try {

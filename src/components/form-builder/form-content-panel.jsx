@@ -105,7 +105,8 @@ function GridCell({
   onFieldDelete,
   onFieldMove,
   onFieldReorder,
-  onFieldUpdate
+  onFieldUpdate,
+  gridColumns
 }) {
   const [{ isOver }, drop] = useDrop({
     accept: [ItemTypes.FIELD, ItemTypes.COMPONENT],
@@ -165,9 +166,10 @@ function GridCell({
           onSelect={() => onFieldSelect(field)}
           onDelete={() => onFieldDelete(field.id)}
           onMove={onFieldMove}
-          onReorder={onFieldReorder}
-          canMoveUp
-          canMoveDown
+          canMoveUp={field.position && field.position.row > 0}
+          canMoveDown // Always allow moving down (can create new rows)
+          canMoveLeft={field.position && field.position.col > 0}
+          canMoveRight={field.position && field.position.col < (gridColumns - 1)}
         />
       ) : (
         <Box sx={{ 
@@ -228,26 +230,11 @@ export default function FormContentPanel({
     const newColumns = event.target.value;
     setGridColumns(newColumns);
     
-    // Reposition all fields when grid columns change
-    if (fields.length > 0) {
-      const updatedFields = fields.map((field, index) => {
-        // Calculate new position based on index and new column count
-        const newRow = Math.floor(index / newColumns);
-        const newCol = index % newColumns;
-        
-        return {
-          ...field,
-          position: { row: newRow, col: newCol }
-        };
-      });
-      
-      // Update both grid columns and repositioned fields
-      onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
-      onFieldUpdate && onFieldUpdate('fields', updatedFields);
-    } else {
-      // Just update grid columns if no fields exist
-      onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
-    }
+    // Update grid columns setting
+    onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
+    
+    // Note: We don't reposition fields when grid columns change
+    // This preserves the user's drag-and-drop positioning
   };
 
   const fields = formData.fields || [];
@@ -302,34 +289,45 @@ export default function FormContentPanel({
             flexDirection: 'column',
             gap: 1
           }}>
-            {Array.from({ length: Math.max(Math.ceil((fields.length + 2) / gridColumns), 3) }, (rowItem, rowIndex) => (
-              <Box key={rowIndex} sx={{ 
-                display: 'flex', 
-                gap: 1 
-              }}>
-                {Array.from({ length: gridColumns }, (colItem, colIndex) => {
-                  const fieldIndex = rowIndex * gridColumns + colIndex;
-                  const field = fields[fieldIndex];
-                  
-                  return (
-                    <Box key={colIndex} sx={{ flex: 1, minWidth: 200 }}>
-                      <GridCell
-                        row={rowIndex}
-                        col={colIndex}
-                        field={field}
-                        fields={fields}
-                        selectedField={selectedField}
-                        onFieldSelect={handleFieldSelect}
-                        onFieldDelete={handleFieldDelete}
-                        onFieldMove={handleFieldMove}
-                        onFieldReorder={handleFieldReorder}
-                        onFieldUpdate={onFieldUpdate}
-                      />
-                    </Box>
-                  );
-                })}
-              </Box>
-            ))}
+            {(() => {
+              // Calculate the maximum row and column from field positions
+              const maxRow = Math.max(...fields.map(f => f.position?.row || 0), 0);
+              const maxCol = Math.max(...fields.map(f => f.position?.col || 0), 0);
+              const totalRows = Math.max(maxRow + 1, Math.ceil((fields.length + 2) / gridColumns), 3);
+              const totalCols = Math.max(maxCol + 1, gridColumns);
+              
+              return Array.from({ length: totalRows }, (rowItem, rowIndex) => (
+                <Box key={rowIndex} sx={{ 
+                  display: 'flex', 
+                  gap: 1 
+                }}>
+                  {Array.from({ length: totalCols }, (colItem, colIndex) => {
+                    // Find field at this specific position
+                    const field = fields.find(f => 
+                      f.position && f.position.row === rowIndex && f.position.col === colIndex
+                    );
+                    
+                    return (
+                      <Box key={colIndex} sx={{ flex: 1, minWidth: 200 }}>
+                        <GridCell
+                          row={rowIndex}
+                          col={colIndex}
+                          field={field}
+                          fields={fields}
+                          selectedField={selectedField}
+                          onFieldSelect={handleFieldSelect}
+                          onFieldDelete={handleFieldDelete}
+                          onFieldMove={handleFieldMove}
+                          onFieldReorder={handleFieldReorder}
+                          onFieldUpdate={onFieldUpdate}
+                          gridColumns={gridColumns}
+                        />
+                      </Box>
+                    );
+                  })}
+                </Box>
+              ));
+            })()}
           </Box>
         ) : (
           <EmptyDropZone 
