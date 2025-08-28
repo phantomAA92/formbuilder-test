@@ -68,21 +68,35 @@ export default function CustomFormPage() {
         [fieldId]: updates
       }));
     } else if (fieldId === 'fields') {
+      // When updating the entire fields array (e.g., from drag and drop)
       setFormData(prev => {
-        // Update position values to reflect the new array order
-        const gridColumns = prev.gridColumns || 2;
-        const updatedFields = updates.map((field, index) => ({
-          ...field,
-          position: {
-            row: Math.floor(index / gridColumns),
-            col: index % gridColumns
-          }
-        }));
+        // Check if this is a position update (drag and drop)
+        const hasPositionUpdates = updates.some(field => field.position);
         
-        return {
-          ...prev,
-          fields: updatedFields
-        };
+        if (hasPositionUpdates) {
+          // If fields have position data, preserve their positions
+          // This happens during drag and drop repositioning
+          return {
+            ...prev,
+            fields: updates
+          };
+        } else {
+          // If no position data, recalculate positions based on array order
+          // This happens during reordering or other field updates
+          const gridColumns = prev.gridColumns || 2;
+          const updatedFields = updates.map((field, index) => ({
+            ...field,
+            position: {
+              row: Math.floor(index / gridColumns),
+              col: index % gridColumns
+            }
+          }));
+          
+          return {
+            ...prev,
+            fields: updatedFields
+          };
+        }
       });
     } else {
       setFormData(prev => ({
@@ -98,19 +112,11 @@ export default function CustomFormPage() {
     setFormData(prev => {
       const remainingFields = prev.fields.filter(field => field.id !== fieldId);
       
-      // Update position values to reflect the new array order after deletion
-      const gridColumns = prev.gridColumns || 2;
-      const updatedFields = remainingFields.map((field, index) => ({
-        ...field,
-        position: {
-          row: Math.floor(index / gridColumns),
-          col: index % gridColumns
-        }
-      }));
-      
+      // Preserve existing positions - don't recalculate
+      // This allows the grid to show empty cells where the deleted field was
       return {
         ...prev,
-        fields: updatedFields
+        fields: remainingFields
       };
     });
     if (selectedField?.id === fieldId) {
@@ -121,25 +127,88 @@ export default function CustomFormPage() {
   const handleMoveField = (fieldId, direction) => {
     setFormData(prev => {
       const fields = [...prev.fields];
-      const currentIndex = fields.findIndex(field => field.id === fieldId);
+      const currentField = fields.find(field => field.id === fieldId);
       
-      if (direction === 'up' && currentIndex > 0) {
-        [fields[currentIndex], fields[currentIndex - 1]] = [fields[currentIndex - 1], fields[currentIndex]];
-      } else if (direction === 'down' && currentIndex < fields.length - 1) {
-        [fields[currentIndex], fields[currentIndex + 1]] = [fields[currentIndex + 1], fields[currentIndex]];
+      if (!currentField || !currentField.position) {
+        return prev;
       }
       
-      // Update position values to reflect the new array order
       const gridColumns = prev.gridColumns || 2;
-      const updatedFields = fields.map((field, index) => ({
-        ...field,
-        position: {
-          row: Math.floor(index / gridColumns),
-          col: index % gridColumns
-        }
-      }));
+      const { row: currentRow, col: currentCol } = currentField.position;
       
-      return { ...prev, fields: updatedFields };
+      if (direction === 'up') {
+        // Move field up in the grid (decrease row)
+        if (currentRow > 0) {
+          // Check if there's a field in the position above
+          const fieldAbove = fields.find(f => 
+            f.position && f.position.row === currentRow - 1 && f.position.col === currentCol
+          );
+          
+          if (fieldAbove) {
+            // Swap positions with the field above
+            const tempPosition = currentField.position;
+            currentField.position = fieldAbove.position;
+            fieldAbove.position = tempPosition;
+          } else {
+            // Move to empty position above
+            currentField.position = { row: currentRow - 1, col: currentCol };
+          }
+        }
+      } else if (direction === 'down') {
+        // Move field down in the grid (increase row)
+        // Check if there's a field in the position below
+        const fieldBelow = fields.find(f => 
+          f.position && f.position.row === currentRow + 1 && f.position.col === currentCol
+        );
+        
+        if (fieldBelow) {
+          // Swap positions with the field below
+          const tempPosition = currentField.position;
+          currentField.position = fieldBelow.position;
+          fieldBelow.position = tempPosition;
+        } else {
+          // Move to empty position below
+          currentField.position = { row: currentRow + 1, col: currentCol };
+        }
+      } else if (direction === 'left') {
+        // Move field left in the grid (decrease column)
+        if (currentCol > 0) {
+          // Check if there's a field in the position to the left
+          const fieldLeft = fields.find(f => 
+            f.position && f.position.row === currentRow && f.position.col === currentCol - 1
+          );
+          
+          if (fieldLeft) {
+            // Swap positions with the field to the left
+            const tempPosition = currentField.position;
+            currentField.position = fieldLeft.position;
+            fieldLeft.position = tempPosition;
+          } else {
+            // Move to empty position to the left
+            currentField.position = { row: currentRow, col: currentCol - 1 };
+          }
+        }
+      } else if (direction === 'right') {
+        // Move field right in the grid (increase column)
+        if (currentCol < gridColumns - 1) {
+          // Check if there's a field in the position to the right
+          const fieldRight = fields.find(f => 
+            f.position && f.position.row === currentRow && f.position.col === currentCol + 1
+          );
+          
+          if (fieldRight) {
+            // Swap positions with the field to the right
+            const tempPosition = currentField.position;
+            currentField.position = fieldRight.position;
+            fieldRight.position = tempPosition;
+          } else {
+            // Move to empty position to the right
+            currentField.position = { row: currentRow, col: currentCol + 1 };
+          }
+        }
+      }
+      
+      return { ...prev, fields: fields };
     });
   };
 

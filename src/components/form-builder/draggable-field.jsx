@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag } from 'react-dnd';
 
 import {
   Box,
@@ -27,6 +27,8 @@ import {
   CalendarToday,
   KeyboardArrowUp,
   KeyboardArrowDown,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
   RadioButtonChecked
 } from '@mui/icons-material';
 
@@ -57,56 +59,34 @@ export default function DraggableField({
   onSelect,
   onDelete,
   onMove,
-  onReorder,
   canMoveUp,
-  canMoveDown
+  canMoveDown,
+  canMoveLeft,
+  canMoveRight
 }) {
   const ref = useRef(null);
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.FIELD,
-    item: { type: ItemTypes.FIELD, index, fieldId: field.id },
+    item: () => ({ 
+        type: ItemTypes.FIELD, 
+        index, 
+        fieldId: field.id,
+        field // Include the full field object for reference
+      }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
 
-  const [{ isOver }, drop] = useDrop({
-    accept: ItemTypes.FIELD,
-    hover: (item, monitor) => {
-      if (!ref.current) {
-        return;
-      }
-      const dragIndex = item.index;
-      const hoverIndex = index;
+  // Removed drop functionality - GridCell handles the drop for repositioning
+  const isOver = false; // We don't need hover state for repositioning
 
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      const hoverBoundingRect = ref.current?.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-
-      onReorder(dragIndex, hoverIndex);
-      item.index = hoverIndex;
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
-  });
-
-  const handleSelect = () => {
-    onSelect(field);
+  const handleSelect = (e) => {
+    // Only select if not dragging
+    if (!isDragging) {
+      onSelect(field);
+    }
   };
 
   const handleDelete = (e) => {
@@ -122,6 +102,16 @@ export default function DraggableField({
   const handleMoveDown = (e) => {
     e.stopPropagation();
     onMove(field.id, 'down');
+  };
+
+  const handleMoveLeft = (e) => {
+    e.stopPropagation();
+    onMove(field.id, 'left');
+  };
+
+  const handleMoveRight = (e) => {
+    e.stopPropagation();
+    onMove(field.id, 'right');
   };
 
   const FieldIcon = fieldIcons[field.type] || TextFields;
@@ -489,7 +479,7 @@ export default function DraggableField({
   };
 
   return (
-    <div ref={drop}>
+    <div>
       <Paper
         ref={drag}
         sx={{
@@ -499,15 +489,24 @@ export default function DraggableField({
           border: '2px solid',
           borderColor: isSelected ? 'primary.main' : isOver ? 'primary.light' : 'transparent',
           bgcolor: isSelected ? 'primary.light' : 'background.paper',
+          transition: 'all 0.2s ease',
           '&:active': { cursor: 'grabbing' },
-          transition: 'all 0.2s ease'
+          '&:hover': {
+            borderColor: 'primary.main',
+            boxShadow: 2
+          }
         }}
         onClick={handleSelect}
       >
         {/* Field Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <DragIndicator sx={{ color: 'text.secondary', cursor: 'grab', fontSize: 16 }} />
+            <DragIndicator 
+              sx={{ 
+                color: 'text.secondary', 
+                fontSize: 16
+              }} 
+            />
             <FieldIcon sx={{ color: 'primary.main', fontSize: 16 }} />
             <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.875rem' }}>
               {field.label || 'Untitled Field'}
@@ -534,7 +533,16 @@ export default function DraggableField({
               size="small"
               onClick={handleMoveUp}
               disabled={!canMoveUp}
-              sx={{ opacity: canMoveUp ? 1 : 0.3, padding: 0.5 }}
+              sx={{ 
+                opacity: canMoveUp ? 1 : 0.3, 
+                padding: 0.5,
+                minWidth: 24,
+                minHeight: 24,
+                bgcolor: canMoveUp ? 'action.hover' : 'transparent',
+                '&:hover': {
+                  bgcolor: canMoveUp ? 'action.selected' : 'transparent'
+                }
+              }}
             >
               <KeyboardArrowUp sx={{ fontSize: 16 }} />
             </IconButton>
@@ -542,15 +550,65 @@ export default function DraggableField({
               size="small"
               onClick={handleMoveDown}
               disabled={!canMoveDown}
-              sx={{ opacity: canMoveDown ? 1 : 0.3, padding: 0.5 }}
+              sx={{ 
+                opacity: canMoveDown ? 1 : 0.3, 
+                padding: 0.5,
+                minWidth: 24,
+                minHeight: 24,
+                bgcolor: canMoveDown ? 'action.hover' : 'transparent',
+                '&:hover': {
+                  bgcolor: canMoveDown ? 'action.selected' : 'transparent'
+                }
+              }}
             >
               <KeyboardArrowDown sx={{ fontSize: 16 }} />
             </IconButton>
             <IconButton
               size="small"
+              onClick={handleMoveLeft}
+              disabled={!canMoveLeft}
+              sx={{ 
+                opacity: canMoveLeft ? 1 : 0.3, 
+                padding: 0.5,
+                minWidth: 24,
+                minHeight: 24,
+                bgcolor: canMoveLeft ? 'action.hover' : 'transparent',
+                '&:hover': {
+                  bgcolor: canMoveLeft ? 'action.selected' : 'transparent'
+                }
+              }}
+            >
+              <KeyboardArrowLeft sx={{ fontSize: 16 }} />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={handleMoveRight}
+              disabled={!canMoveRight}
+              sx={{ 
+                opacity: canMoveRight ? 1 : 0.3, 
+                padding: 0.5,
+                minWidth: 24,
+                minHeight: 24,
+                bgcolor: canMoveRight ? 'action.hover' : 'transparent',
+                '&:hover': {
+                  bgcolor: canMoveRight ? 'action.selected' : 'transparent'
+                }
+              }}
+            >
+              <KeyboardArrowRight sx={{ fontSize: 16 }} />
+            </IconButton>
+            <IconButton
+              size="small"
               onClick={handleDelete}
               color="error"
-              sx={{ padding: 0.5 }}
+              sx={{ 
+                padding: 0.5,
+                minWidth: 24,
+                minHeight: 24,
+                '&:hover': {
+                  bgcolor: 'error.light'
+                }
+              }}
             >
               <Delete sx={{ fontSize: 16 }} />
             </IconButton>
