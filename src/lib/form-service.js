@@ -148,40 +148,46 @@ export const mockForms = [
     title: 'Client Profile Form',
     description: 'Comprehensive client information and assessment form',
     type: 'profile',
+    gridColumns: 2,
     fields: [
       {
         id: 'field_1',
         type: 'text',
         label: 'Full Name',
         required: true,
-        placeholder: 'Enter full name'
+        placeholder: 'Enter full name',
+        position: { row: 0, col: 0 }
       },
       {
         id: 'field_2',
         type: 'date',
         label: 'Date of Birth',
-        required: true
+        required: true,
+        position: { row: 0, col: 1 }
       },
       {
         id: 'field_3',
         type: 'text',
         label: 'Address',
         required: true,
-        placeholder: 'Enter full address'
+        placeholder: 'Enter full address',
+        position: { row: 1, col: 0 }
       },
       {
         id: 'field_4',
         type: 'text',
         label: 'Phone Number',
         required: true,
-        placeholder: 'Enter phone number'
+        placeholder: 'Enter phone number',
+        position: { row: 1, col: 1 }
       },
       {
         id: 'field_5',
         type: 'text',
         label: 'Emergency Contact',
         required: false,
-        placeholder: 'Enter emergency contact name and number'
+        placeholder: 'Enter emergency contact name and number',
+        position: { row: 2, col: 0 }
       },
       {
         id: 'field_6',
@@ -189,14 +195,16 @@ export const mockForms = [
         label: 'Medical History',
         required: false,
         placeholder: 'Enter relevant medical history',
-        rows: 6
+        rows: 6,
+        position: { row: 2, col: 1 }
       },
       {
         id: 'field_7',
         type: 'checkbox',
         label: 'Allergies',
         required: false,
-        options: ['Medication', 'Food', 'Environmental', 'None']
+        options: ['Medication', 'Food', 'Environmental', 'None'],
+        position: { row: 3, col: 0 }
       },
       {
         id: 'field_8',
@@ -204,7 +212,8 @@ export const mockForms = [
         label: 'Client Signature',
         required: true,
         width: 300,
-        height: 150
+        height: 150,
+        position: { row: 3, col: 1 }
       }
     ],
     createdAt: '2024-01-15T10:00:00Z',
@@ -215,48 +224,55 @@ export const mockForms = [
     title: 'Caregiver Registration',
     description: 'Multi-step registration form for new caregivers',
     type: 'custom',
+    gridColumns: 2,
     fields: [
       {
         id: 'field_1',
         type: 'text',
         label: 'First Name',
         required: true,
-        placeholder: 'Enter first name'
+        placeholder: 'Enter first name',
+        position: { row: 0, col: 0 }
       },
       {
         id: 'field_2',
         type: 'text',
         label: 'Last Name',
         required: true,
-        placeholder: 'Enter last name'
+        placeholder: 'Enter last name',
+        position: { row: 0, col: 1 }
       },
       {
         id: 'field_3',
         type: 'text',
         label: 'Email Address',
         required: true,
-        placeholder: 'Enter email address'
+        placeholder: 'Enter email address',
+        position: { row: 1, col: 0 }
       },
       {
         id: 'field_4',
         type: 'text',
         label: 'Phone Number',
         required: true,
-        placeholder: 'Enter phone number'
+        placeholder: 'Enter phone number',
+        position: { row: 1, col: 1 }
       },
       {
         id: 'field_5',
         type: 'dropdown',
         label: 'Experience Level',
         required: true,
-        options: ['Beginner (0-1 years)', 'Intermediate (2-5 years)', 'Advanced (5+ years)']
+        options: ['Beginner (0-1 years)', 'Intermediate (2-5 years)', 'Advanced (5+ years)'],
+        position: { row: 2, col: 0 }
       },
       {
         id: 'field_6',
         type: 'checkbox',
         label: 'Certifications',
         required: false,
-        options: ['CPR Certified', 'First Aid Certified', 'Nursing License', 'CNA License', 'Other']
+        options: ['CPR Certified', 'First Aid Certified', 'Nursing License', 'CNA License', 'Other'],
+        position: { row: 2, col: 1 }
       },
       {
         id: 'field_7',
@@ -264,7 +280,8 @@ export const mockForms = [
         label: 'Why do you want to be a caregiver?',
         required: true,
         placeholder: 'Please describe your motivation and goals',
-        rows: 4
+        rows: 4,
+        position: { row: 3, col: 0 }
       },
       {
         id: 'field_8',
@@ -272,7 +289,8 @@ export const mockForms = [
         label: 'Resume/CV',
         required: true,
         accept: '.pdf,.doc,.docx',
-        multiple: false
+        multiple: false,
+        position: { row: 3, col: 1 }
       }
     ],
     createdAt: '2024-01-16T14:30:00Z',
@@ -283,26 +301,30 @@ export const mockForms = [
     title: 'Daily Activity Log',
     description: 'Track daily activities and client interactions',
     type: 'custom',
+    gridColumns: 2,
     fields: [
       {
         id: 'field_1',
         type: 'date',
         label: 'Date',
-        required: true
+        required: true,
+        position: { row: 0, col: 0 }
       },
       {
         id: 'field_2',
         type: 'text',
         label: 'Client Name',
         required: true,
-        placeholder: 'Enter client name'
+        placeholder: 'Enter client name',
+        position: { row: 0, col: 1 }
       },
       {
         id: 'field_3',
         type: 'dropdown',
         label: 'Activity Type',
         required: true,
-        options: ['Personal Care', 'Meal Preparation', 'Medication Reminder', 'Exercise', 'Social Activity', 'Medical Appointment', 'Other']
+        options: ['Personal Care', 'Meal Preparation', 'Medication Reminder', 'Exercise', 'Social Activity', 'Medical Appointment', 'Other'],
+        position: { row: 1, col: 0 }
       },
       {
         id: 'field_4',
@@ -310,7 +332,8 @@ export const mockForms = [
         label: 'Activity Description',
         required: true,
         placeholder: 'Describe the activity in detail',
-        rows: 4
+        rows: 4,
+        position: { row: 1, col: 1 }
       },
       {
         id: 'field_5',
@@ -319,14 +342,16 @@ export const mockForms = [
         required: true,
         placeholder: 'Enter duration',
         min: 1,
-        max: 480
+        max: 480,
+        position: { row: 2, col: 0 }
       },
       {
         id: 'field_6',
         type: 'radio',
         label: 'Client Mood',
         required: true,
-        options: ['Excellent', 'Good', 'Fair', 'Poor']
+        options: ['Excellent', 'Good', 'Fair', 'Poor'],
+        position: { row: 2, col: 1 }
       },
       {
         id: 'field_7',
@@ -334,7 +359,8 @@ export const mockForms = [
         label: 'Notes',
         required: false,
         placeholder: 'Additional notes or observations',
-        rows: 3
+        rows: 3,
+        position: { row: 3, col: 0 }
       }
     ],
     createdAt: '2024-01-17T09:15:00Z',
@@ -345,33 +371,38 @@ export const mockForms = [
     title: 'Incident Report Form',
     description: 'Document and report incidents or accidents',
     type: 'custom',
+    gridColumns: 2,
     fields: [
       {
         id: 'field_1',
         type: 'date',
         label: 'Incident Date',
-        required: true
+        required: true,
+        position: { row: 0, col: 0 }
       },
       {
         id: 'field_2',
         type: 'text',
         label: 'Time of Incident',
         required: true,
-        placeholder: 'Enter time (e.g., 2:30 PM)'
+        placeholder: 'Enter time (e.g., 2:30 PM)',
+        position: { row: 0, col: 1 }
       },
       {
         id: 'field_3',
         type: 'text',
         label: 'Location',
         required: true,
-        placeholder: 'Where did the incident occur?'
+        placeholder: 'Where did the incident occur?',
+        position: { row: 1, col: 0 }
       },
       {
         id: 'field_4',
         type: 'text',
         label: 'Person(s) Involved',
         required: true,
-        placeholder: 'Names of people involved'
+        placeholder: 'Names of people involved',
+        position: { row: 1, col: 1 }
       },
       {
         id: 'field_5',
@@ -379,21 +410,24 @@ export const mockForms = [
         label: 'Description of Incident',
         required: true,
         placeholder: 'Provide a detailed description of what happened',
-        rows: 6
+        rows: 6,
+        position: { row: 2, col: 0 }
       },
       {
         id: 'field_6',
         type: 'dropdown',
         label: 'Severity Level',
         required: true,
-        options: ['Minor', 'Moderate', 'Major', 'Critical']
+        options: ['Minor', 'Moderate', 'Major', 'Critical'],
+        position: { row: 2, col: 1 }
       },
       {
         id: 'field_7',
         type: 'checkbox',
         label: 'Actions Taken',
         required: true,
-        options: ['First Aid Administered', 'Medical Attention Sought', 'Family Notified', 'Supervisor Notified', 'Documentation Completed']
+        options: ['First Aid Administered', 'Medical Attention Sought', 'Family Notified', 'Supervisor Notified', 'Documentation Completed'],
+        position: { row: 3, col: 0 }
       },
       {
         id: 'field_8',
@@ -401,7 +435,8 @@ export const mockForms = [
         label: 'Preventive Measures',
         required: false,
         placeholder: 'What can be done to prevent similar incidents?',
-        rows: 4
+        rows: 4,
+        position: { row: 3, col: 1 }
       },
       {
         id: 'field_9',
@@ -410,7 +445,8 @@ export const mockForms = [
         required: false,
         accept: '.pdf,.jpg,.png,.doc,.docx',
         multiple: true,
-        maxSize: 10
+        maxSize: 10,
+        position: { row: 4, col: 0 }
       }
     ],
     createdAt: '2024-01-18T11:45:00Z',
@@ -421,46 +457,53 @@ export const mockForms = [
     title: 'Medication Management',
     description: 'Track medication administration and schedules',
     type: 'custom',
+    gridColumns: 2,
     fields: [
       {
         id: 'field_1',
         type: 'text',
         label: 'Client Name',
         required: true,
-        placeholder: 'Enter client name'
+        placeholder: 'Enter client name',
+        position: { row: 0, col: 0 }
       },
       {
         id: 'field_2',
         type: 'text',
         label: 'Medication Name',
         required: true,
-        placeholder: 'Enter medication name'
+        placeholder: 'Enter medication name',
+        position: { row: 0, col: 1 }
       },
       {
         id: 'field_3',
         type: 'text',
         label: 'Dosage',
         required: true,
-        placeholder: 'Enter dosage (e.g., 10mg)'
+        placeholder: 'Enter dosage (e.g., 10mg)',
+        position: { row: 1, col: 0 }
       },
       {
         id: 'field_4',
         type: 'dropdown',
         label: 'Frequency',
         required: true,
-        options: ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'Other']
+        options: ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'Other'],
+        position: { row: 1, col: 1 }
       },
       {
         id: 'field_5',
         type: 'date',
         label: 'Start Date',
-        required: true
+        required: true,
+        position: { row: 2, col: 0 }
       },
       {
         id: 'field_6',
         type: 'date',
         label: 'End Date',
-        required: false
+        required: false,
+        position: { row: 2, col: 1 }
       },
       {
         id: 'field_7',
@@ -468,14 +511,16 @@ export const mockForms = [
         label: 'Special Instructions',
         required: false,
         placeholder: 'Any special instructions or side effects to watch for',
-        rows: 3
+        rows: 3,
+        position: { row: 3, col: 0 }
       },
       {
         id: 'field_8',
         type: 'checkbox',
         label: 'Administration Times',
         required: true,
-        options: ['Morning', 'Afternoon', 'Evening', 'Bedtime']
+        options: ['Morning', 'Afternoon', 'Evening', 'Bedtime'],
+        position: { row: 3, col: 1 }
       }
     ],
     createdAt: '2024-01-19T16:20:00Z',
