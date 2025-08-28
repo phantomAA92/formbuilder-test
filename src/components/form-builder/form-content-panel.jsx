@@ -227,9 +227,29 @@ export default function FormContentPanel({
 
   const handleGridColumnsChange = (event) => {
     const newColumns = event.target.value;
+    const oldColumns = gridColumns;
     setGridColumns(newColumns);
-    // Update form data with grid columns configuration
-    onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
+    
+    // Reposition all fields when grid columns change
+    if (fields.length > 0) {
+      const updatedFields = fields.map((field, index) => {
+        // Calculate new position based on index and new column count
+        const newRow = Math.floor(index / newColumns);
+        const newCol = index % newColumns;
+        
+        return {
+          ...field,
+          position: { row: newRow, col: newCol }
+        };
+      });
+      
+      // Update both grid columns and repositioned fields
+      onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
+      onFieldUpdate && onFieldUpdate('fields', updatedFields);
+    } else {
+      // Just update grid columns if no fields exist
+      onFieldUpdate && onFieldUpdate('gridColumns', newColumns);
+    }
   };
 
   const fields = formData.fields || [];
@@ -237,7 +257,7 @@ export default function FormContentPanel({
   // Organize fields into grid layout
   const organizeFieldsInGrid = (fieldList, columns = 2) => {
     const grid = [];
-    const maxRows = Math.max(10, Math.ceil(fieldList.length / columns));
+    const maxRows = Math.max(1, Math.ceil(fieldList.length / columns));
     
     // Initialize grid
     for (let row = 0; row < maxRows; row++) {
@@ -248,11 +268,25 @@ export default function FormContentPanel({
     }
     
     // Place fields in their positions
-    fieldList.forEach(field => {
+    fieldList.forEach((field, index) => {
       if (field.position) {
         const { row, col } = field.position;
         if (row < maxRows && col < columns) {
           grid[row][col] = field;
+        } else {
+          // If position is invalid, calculate a fallback position
+          const fallbackRow = Math.floor(index / columns);
+          const fallbackCol = index % columns;
+          if (fallbackRow < maxRows && fallbackCol < columns) {
+            grid[fallbackRow][fallbackCol] = field;
+          }
+        }
+      } else {
+        // If no position exists, calculate based on index
+        const fallbackRow = Math.floor(index / columns);
+        const fallbackCol = index % columns;
+        if (fallbackRow < maxRows && fallbackCol < columns) {
+          grid[fallbackRow][fallbackCol] = field;
         }
       }
     });
