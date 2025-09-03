@@ -74,63 +74,42 @@ export default function FormBuilder({
     onMoveField && onMoveField(fieldId, direction);
   };
 
-  const handleAddField = (type, defaultData) => {
-    try {
-      if (!type || typeof type !== 'string') {
-        console.error('Invalid field type:', String(type));
-        return;
-      }
-      
-      const currentFields = safeFormData.fields || [];
-      if (!Array.isArray(currentFields)) {
-        console.error('Fields is not an array:', typeof currentFields);
-        return;
-      }
-      
-      // Generate sequential position for the new field
-      // If no fields exist, place in first position (0,0)
-      // If fields exist, place after the last component
-      let position;
-      const gridColumns = safeFormData.gridColumns || 2; // Get current grid columns setting
-      
-      if (currentFields.length === 0) {
-        position = { row: 0, col: 0 };
-      } else {
-        // Find the last placed component and place after it
-        const lastField = currentFields[currentFields.length - 1];
-        if (lastField.position) {
-          const { row, col } = lastField.position;
-          if (col < gridColumns - 1) {
-            // Move to next column in same row
-            position = { row, col: col + 1 };
-          } else {
-            // Move to first column of next row
-            position = { row: row + 1, col: 0 };
-          }
+  const handleAddField = (componentType, defaultData = {}) => {
+    const currentFields = safeFormData.fields || [];
+    
+    // Generate sequential position for clicked components
+    let position;
+    const gridColumns = safeFormData.gridColumns || 2;
+    
+    if (currentFields.length === 0) {
+      position = { row: 0, col: 0 };
+    } else {
+      const lastField = currentFields[currentFields.length - 1];
+      if (lastField.position) {
+        const { row, col } = lastField.position;
+        if (col < gridColumns - 1) {
+          position = { row, col: col + 1 };
         } else {
-          // Fallback: place after the last field in sequence
-          position = { row: Math.floor(currentFields.length / gridColumns), col: currentFields.length % gridColumns };
+          position = { row: row + 1, col: 0 };
         }
+      } else {
+        position = { 
+          row: Math.floor(currentFields.length / gridColumns), 
+          col: currentFields.length % gridColumns 
+        };
       }
-      
-      const newField = {
-        id: `field_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-        type,
-        label: defaultData?.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
-        required: false,
-        position,
-        ...defaultData
-      };
-      
-      const updatedFields = [...currentFields, newField];
-      onUpdateField && onUpdateField('fields', updatedFields);
-      
-      // Auto-select the new field and open drawer
-      onSelectField && onSelectField(newField);
-      setDrawerOpen(true);
-    } catch (error) {
-      console.error('Error adding field:', String(error));
     }
+    
+    const newField = {
+      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: componentType,
+      position,
+      gridSpan: 1, // Default to 1 column span
+      ...defaultData
+    };
+    
+    const updatedFields = [...currentFields, newField];
+    onUpdateField && onUpdateField('fields', updatedFields);
   };
 
   const handleFieldReorder = useCallback((dragIndex, hoverIndex) => {

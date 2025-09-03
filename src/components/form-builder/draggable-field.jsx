@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { useDrag } from 'react-dnd';
 
 import {
@@ -62,9 +62,14 @@ export default function DraggableField({
   canMoveUp,
   canMoveDown,
   canMoveLeft,
-  canMoveRight
+  canMoveRight,
+  onResize,
+  gridColumns,
+  maxGridSpan
 }) {
-  const ref = useRef(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartSpan, setResizeStartSpan] = useState(0);
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.FIELD,
@@ -112,6 +117,51 @@ export default function DraggableField({
   const handleMoveRight = (e) => {
     e.stopPropagation();
     onMove(field.id, 'right');
+  };
+
+  const handleResizeStart = (e) => {
+    e.stopPropagation();
+    console.log('Resize started for field:', field.id, 'current span:', field.gridSpan);
+    setIsResizing(true);
+    setResizeStartX(e.clientX);
+    setResizeStartSpan(field.gridSpan || 1);
+    
+    // Add global event listeners
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+
+  const handleResizeMove = (e) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - resizeStartX;
+    const cellWidth = 200; // Approximate cell width
+    const deltaSpan = Math.round(deltaX / cellWidth);
+    
+    // Calculate new span with constraints
+    let newSpan = Math.max(1, Math.min(maxGridSpan || gridColumns, resizeStartSpan + deltaSpan));
+    
+    // Ensure the field doesn't extend beyond grid boundaries
+    if (field.position && field.position.col + newSpan > gridColumns) {
+      newSpan = Math.max(1, gridColumns - field.position.col);
+    }
+    
+    // Update the field's grid span in real-time
+    if (onResize && newSpan !== field.gridSpan) {
+      console.log('Resizing field:', field.id, 'from', field.gridSpan, 'to', newSpan);
+      onResize(field.id, newSpan);
+    }
+  };
+
+  const handleResizeEnd = () => {
+    console.log('=== RESIZE END ===');
+    console.log('Resize ended for field:', field.id, 'final span:', field.gridSpan);
+    console.log('Resize start span was:', resizeStartSpan);
+    setIsResizing(false);
+    
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
   };
 
   const FieldIcon = fieldIcons[field.type] || TextFields;
@@ -488,13 +538,16 @@ export default function DraggableField({
           opacity: isDragging ? 0.5 : 1,
           border: '2px solid',
           borderColor: isSelected ? 'primary.main' : isOver ? 'primary.light' : 'transparent',
-          bgcolor: isSelected ? 'primary.light' : 'background.paper',
+          bgcolor: isSelected ? 'background.paper' : 'background.paper',
           transition: 'all 0.2s ease',
           '&:active': { cursor: 'grabbing' },
           '&:hover': {
             borderColor: 'primary.main',
             boxShadow: 2
-          }
+          },
+          position: 'relative',
+          // Apply grid span styling
+          gridColumn: field.gridSpan && field.gridSpan > 1 ? `span ${field.gridSpan}` : undefined
         }}
         onClick={handleSelect}
       >
@@ -522,6 +575,16 @@ export default function DraggableField({
                 label="Required" 
                 size="small" 
                 color="error" 
+                variant="outlined"
+                sx={{ fontSize: '0.65rem', height: 16 }}
+              />
+            )}
+            {/* Grid Span Indicator */}
+            {field.gridSpan && field.gridSpan > 1 && (
+              <Chip 
+                label={`${field.gridSpan} cols`} 
+                size="small" 
+                color="primary" 
                 variant="outlined"
                 sx={{ fontSize: '0.65rem', height: 16 }}
               />
@@ -619,6 +682,67 @@ export default function DraggableField({
 
         {/* Field Preview */}
         {renderFieldPreview()}
+
+        {/* Resize Handle */}
+        <Box
+          sx={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 8,
+            cursor: 'col-resize',
+            backgroundColor: 'transparent',
+            opacity: isSelected ? 1 : 0,
+            transition: 'opacity 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'primary.main',
+              opacity: 0.3
+            },
+            '&:active': {
+              backgroundColor: 'primary.main',
+              opacity: 0.5
+            }
+          }}
+          onMouseDown={handleResizeStart}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              right: 2,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 4,
+              height: 20,
+              backgroundColor: 'primary.main',
+              borderRadius: 1,
+              opacity: 0.7
+            }}
+          />
+        </Box>
+        
+        {/* Resize indicator during resize operation */}
+        {isResizing && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'primary.main',
+              color: 'white',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              zIndex: 1000,
+              boxShadow: 2
+            }}
+          >
+            {field.gridSpan || 1} column{field.gridSpan !== 1 ? 's' : ''}
+          </Box>
+        )}
       </Paper>
     </div>
   );

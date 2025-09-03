@@ -148,6 +148,27 @@ export default function FieldProperties({ field, onUpdate }) {
                 }
                 label="Disabled"
               />
+
+              {/* Grid Span Control */}
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Grid Width
+                </Typography>
+                <Select
+                  value={localField.gridSpan || 1}
+                  onChange={(e) => handleChange('gridSpan', e.target.value)}
+                  size="small"
+                  fullWidth
+                >
+                  <MenuItem value={1}>1 Column</MenuItem>
+                  <MenuItem value={2}>2 Columns</MenuItem>
+                  <MenuItem value={3}>3 Columns</MenuItem>
+                  <MenuItem value={4}>4 Columns</MenuItem>
+                </Select>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  How many grid columns this field should span
+                </Typography>
+              </Box>
             </Stack>
           </AccordionDetails>
         </Accordion>

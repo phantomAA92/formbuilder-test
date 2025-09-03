@@ -89,7 +89,8 @@ export default function CustomFormPage() {
             position: {
               row: Math.floor(index / gridColumns),
               col: index % gridColumns
-            }
+            },
+            gridSpan: field.gridSpan || 1 // Preserve existing grid span or default to 1
           }));
           
           return {
@@ -310,7 +311,9 @@ export default function CustomFormPage() {
                         defaultValue: field.defaultValue ? String(field.defaultValue) : '',
                         options: Array.isArray(field.options) ? field.options : [],
                         columns: Array.isArray(field.columns) ? field.columns : [],
-                        steps: Array.isArray(field.steps) ? field.steps : []
+                        steps: Array.isArray(field.steps) ? field.steps : [],
+                        // Preserve grid span information
+                        gridSpan: field.gridSpan || 1
                       };
                     } catch (fieldError) {
                       console.warn('Error processing field:', fieldError, field);
@@ -319,7 +322,8 @@ export default function CustomFormPage() {
                         id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
                         type: field.type || 'text',
                         label: field.label || 'Field',
-                        required: false
+                        required: false,
+                        gridSpan: field.gridSpan || 1
                       };
                     }
                   })
