@@ -412,30 +412,45 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
   };
 
   // Helper function to organize fields in grid layout based on position data
-  const organizeFieldsInGrid = (fields, gridColumns = 2) => {
-    const grid = [];
-    const maxRows = Math.max(10, Math.ceil(fields.length / gridColumns));
+  function organizeFieldsInGrid(fields, gridColumns) {
+    if (!Array.isArray(fields) || fields.length === 0) return [];
     
-    // Initialize grid
-    for (let row = 0; row < maxRows; row++) {
-      grid[row] = [];
-      for (let col = 0; col < gridColumns; col++) {
-        grid[row][col] = null;
+    // Sort fields by position (row, then col)
+    const sortedFields = [...fields].sort((a, b) => {
+      if (a.position?.row !== b.position?.row) {
+        return (a.position?.row || 0) - (b.position?.row || 0);
+      }
+      return (a.position?.col || 0) - (b.position?.col || 0);
+    });
+    
+    // Group fields by row
+    const rows = [];
+    
+    for (const field of sortedFields) {
+      const fieldRow = field.position?.row || 0;
+      const fieldCol = field.position?.col || 0;
+      const fieldSpan = field.gridSpan || 1;
+      
+      // Create new rows if needed
+      while (rows.length <= fieldRow) {
+        rows.push(new Array(gridColumns).fill(null));
+      }
+      
+      // Place field in the grid, respecting its span
+      if (fieldCol + fieldSpan <= gridColumns) {
+        rows[fieldRow][fieldCol] = field;
+        
+        // Mark spanned columns as occupied
+        for (let i = 1; i < fieldSpan; i++) {
+          if (fieldCol + i < gridColumns) {
+            rows[fieldRow][fieldCol + i] = 'spanned';
+          }
+        }
       }
     }
     
-    // Place fields in their positions
-    fields.forEach(field => {
-      if (field.position) {
-        const { row, col } = field.position;
-        if (row < maxRows && col < gridColumns) {
-          grid[row][col] = field;
-        }
-      }
-    });
-    
-    return grid;
-  };
+    return rows;
+  }
 
   // Check if form has wizard fields
   const hasWizard = formData.fields?.some(field => field.type === 'wizard');
@@ -477,15 +492,26 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                       gap: 3
                     }}>
                       {gridLayout.map((row, rowIndex) => 
-                        row.map((field, colIndex) => (
-                          <Box key={`${rowIndex}-${colIndex}`}>
-                            {field ? (
-                              <Box sx={{ mb: 3 }}>
-                                {renderField(field)}
-                              </Box>
-                            ) : null}
-                          </Box>
-                        ))
+                        row.map((cell, colIndex) => {
+                          if (!cell || cell === 'spanned') {
+                            return <Box key={`${rowIndex}-${colIndex}`} />;
+                          }
+                          
+                          const field = cell;
+                          const fieldSpan = field.gridSpan || 1;
+                          
+                          return (
+                            <Box 
+                              key={`${rowIndex}-${colIndex}`}
+                              sx={{
+                                gridColumn: fieldSpan > 1 ? `span ${fieldSpan}` : undefined,
+                                mb: 3
+                              }}
+                            >
+                              {renderField(field)}
+                            </Box>
+                          );
+                        })
                       )}
                     </Box>
                   );
