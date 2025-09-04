@@ -26,23 +26,90 @@ export default function FormPreviewPage() {
         
         // Validate and sanitize the parsed data
         if (parsedData && typeof parsedData === 'object') {
+          const gridCols = parsedData.gridColumns || 2;
+          // Build sanitized fields with non-overlapping placement
+          const sanitizedFields = [];
+          const occupied = new Map(); // row -> boolean[]
+          const isCellFree = (row, col) => {
+            const rowOcc = occupied.get(row) || [];
+            return !rowOcc[col];
+          };
+          const markOccupied = (row, startCol, span) => {
+            const rowOcc = occupied.get(row) || [];
+            for (let i = 0; i < span; i += 1) {
+              rowOcc[startCol + i] = true;
+            }
+            occupied.set(row, rowOcc);
+          };
+          const findPlacement = (desiredRow, desiredCol, span) => {
+            let row = Math.max(0, Number.isFinite(desiredRow) ? desiredRow : 0);
+            let col = Math.max(0, Number.isFinite(desiredCol) ? desiredCol : 0);
+            let attempts = 0;
+            const maxAttempts = 1000;
+            while (attempts < maxAttempts) {
+              // Clamp col within bounds for span
+              if (col + span > gridCols) {
+                col = 0;
+                row += 1;
+                attempts += 1;
+                continue;
+              }
+              // Check overlap
+              let fits = true;
+              for (let i = 0; i < span; i += 1) {
+                if (!isCellFree(row, col + i)) {
+                  fits = false;
+                  break;
+                }
+              }
+              if (fits) {
+                return { row, col };
+              }
+              // Try next column; if exceeds, wrap to next row
+              col += 1;
+              if (col + span > gridCols) {
+                col = 0;
+                row += 1;
+              }
+              attempts += 1;
+            }
+            // Fallback
+            return { row: Math.max(0, desiredRow || 0), col: 0 };
+          };
+
+          if (Array.isArray(parsedData.fields)) {
+            parsedData.fields.forEach((field, idx) => {
+              const rawSpan = field?.gridSpan ?? 1;
+              const safeSpan = Math.max(1, Math.min(gridCols, Number(rawSpan) || 1));
+              const hasPos = field && typeof field === 'object' && field.position && typeof field.position === 'object';
+              const desiredRow = hasPos && Number.isFinite(field.position.row) ? field.position.row : Math.floor(idx / gridCols);
+              const desiredCol = hasPos && Number.isFinite(field.position.col) ? field.position.col : idx % gridCols;
+              const { row: placedRow, col: placedCol } = findPlacement(desiredRow, desiredCol, safeSpan);
+              markOccupied(placedRow, placedCol, safeSpan);
+
+              sanitizedFields.push({
+                ...field,
+                id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
+                label: field.type === 'divider' ? (field.label || '') : (field.label || 'Field'),
+                type: field.type || 'text',
+                required: !!field.required,
+                placeholder: field.placeholder || '',
+                options: Array.isArray(field.options) ? field.options : [],
+                columns: Array.isArray(field.columns) ? field.columns : [],
+                steps: Array.isArray(field.steps) ? field.steps : [],
+                gridSpan: safeSpan,
+                position: { row: placedRow, col: placedCol }
+              });
+            });
+          }
+
           const sanitizedData = {
             id: parsedData.id || 'preview',
             title: parsedData.title || 'Form Preview',
             description: parsedData.description || '',
             type: parsedData.type || 'custom',
-            gridColumns: parsedData.gridColumns || 2,
-            fields: Array.isArray(parsedData.fields) ? parsedData.fields.map(field => ({
-              ...field,
-              id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
-              label: field.type === 'divider' ? (field.label || '') : (field.label || 'Field'),
-              type: field.type || 'text',
-              required: field.required || false,
-              placeholder: field.placeholder || '',
-              options: Array.isArray(field.options) ? field.options : [],
-              columns: Array.isArray(field.columns) ? field.columns : [],
-              steps: Array.isArray(field.steps) ? field.steps : []
-            })) : []
+            gridColumns: gridCols,
+            fields: sanitizedFields
           };
           
           setFormData(sanitizedData);

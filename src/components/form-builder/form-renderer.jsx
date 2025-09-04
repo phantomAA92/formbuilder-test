@@ -492,33 +492,40 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                   const gridColumns = formData.gridColumns || 2;
                   const gridLayout = organizeFieldsInGrid(formData.fields, gridColumns);
                   return (
-                    <Box sx={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-                      gap: 3
-                    }}>
-                      {gridLayout.map((row, rowIndex) => 
-                        row.map((cell, colIndex) => {
-                          if (!cell || cell === 'spanned') {
-                            return <Box key={`${rowIndex}-${colIndex}`} />;
-                          }
-                          
-                          const field = cell;
-                          const fieldSpan = field.gridSpan || 1;
-                          
-                          return (
-                            <Box 
-                              key={`${rowIndex}-${colIndex}`}
-                              sx={{
-                                gridColumn: fieldSpan > 1 ? `span ${fieldSpan}` : undefined,
-                                mb: 3
-                              }}
-                            >
-                              {renderField(field)}
-                            </Box>
-                          );
-                        })
-                      )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {gridLayout.map((row, rowIndex) => (
+                        <Box
+                          key={`row-${rowIndex}`}
+                          sx={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                            gap: 3
+                          }}
+                        >
+                          {row.map((cell, colIndex) => {
+                            if (cell === 'spanned') {
+                              return null;
+                            }
+                            if (!cell) {
+                              return <Box key={`${rowIndex}-${colIndex}`} />;
+                            }
+                            
+                            const field = cell;
+                            const fieldSpan = field.gridSpan || 1;
+                            
+                            return (
+                              <Box 
+                                key={`${rowIndex}-${colIndex}`}
+                                sx={{
+                                  gridColumn: fieldSpan > 1 ? `span ${fieldSpan}` : undefined
+                                }}
+                              >
+                                {renderField(field)}
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      ))}
                     </Box>
                   );
                 } else {
@@ -1282,9 +1289,13 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             orientation={field.orientation || 'horizontal'}
             sx={{
               my: 1,
-              borderColor: field.lineColor || 'divider',
-              borderStyle: field.lineStyle || 'solid',
-              borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+              // Ensure the line is visible across MUI's pseudo-elements
+              '&::before, &::after': {
+                borderTopColor: field.lineColor || 'divider',
+                borderTopStyle: field.lineStyle || 'solid',
+                borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
+                borderColor: field.lineColor || 'divider'
+              }
             }}
           >
             {field.label || ''}

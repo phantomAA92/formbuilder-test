@@ -312,8 +312,9 @@ export default function CustomFormPage() {
                         options: Array.isArray(field.options) ? field.options : [],
                         columns: Array.isArray(field.columns) ? field.columns : [],
                         steps: Array.isArray(field.steps) ? field.steps : [],
-                        // Preserve grid span information
-                        gridSpan: field.gridSpan || 1
+                        // Preserve grid span and position information
+                        gridSpan: field.gridSpan || 1,
+                        position: field.position ? { row: Number(field.position.row) || 0, col: Number(field.position.col) || 0 } : undefined
                       };
                     } catch (fieldError) {
                       console.warn('Error processing field:', fieldError, field);
