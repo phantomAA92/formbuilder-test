@@ -1289,10 +1289,14 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             orientation={field.orientation || 'horizontal'}
             sx={{
               my: 1,
-              // Ensure the line is visible across MUI's pseudo-elements
+              ...(field.label && String(field.label).trim() !== '' ? {} : {
+                borderColor: field.lineColor || 'divider',
+                borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+              }),
               '&::before, &::after': {
                 borderTopColor: field.lineColor || 'divider',
-                borderTopStyle: field.lineStyle || 'solid',
+                borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
                 borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
                 borderColor: field.lineColor || 'divider'
               }

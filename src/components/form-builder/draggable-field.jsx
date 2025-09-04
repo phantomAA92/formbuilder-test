@@ -587,9 +587,17 @@ export default function DraggableField({
               variant={field.variant || 'fullWidth'}
               orientation={field.orientation || 'horizontal'}
               sx={{
-                borderColor: field.lineColor || 'divider',
-                borderStyle: field.lineStyle || 'solid',
-                borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+                ...(field.label && String(field.label).trim() !== '' ? {} : {
+                  borderColor: field.lineColor || 'divider',
+                  borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                  borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+                }),
+                '&::before, &::after': {
+                  borderTopColor: field.lineColor || 'divider',
+                  borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                  borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
+                  borderColor: field.lineColor || 'divider'
+                }
               }}
             >
               {field.label || ''}
