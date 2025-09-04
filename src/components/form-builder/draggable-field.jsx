@@ -32,7 +32,8 @@ import {
   RadioButtonChecked,
   Title,
   HorizontalRule,
-  Phone
+  Phone,
+  Calculate
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -46,6 +47,7 @@ const fieldIcons = {
   checkbox: CheckBox,
   dropdown: ArrowDropDown,
   number: LooksOne,
+  calculated: Calculate,
   date: CalendarToday,
   attachment: AttachFile,
   link: Link,
@@ -68,6 +70,7 @@ function getFallbackTitleByType(type) {
     checkbox: 'Checkboxes',
     dropdown: 'Dropdown',
     number: 'Number',
+    calculated: 'Calculated',
     date: 'Date',
     attachment: 'File Upload',
     link: 'Link',
@@ -374,6 +377,30 @@ export default function DraggableField({
           </Box>
         );
 
+      case 'calculated':
+        return (
+          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              {field.label || 'Calculated'}
+            </Typography>
+            <Box
+              sx={{
+                height: 40,
+                border: '1px dashed',
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 2,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'text.secondary',
+                fontStyle: 'italic'
+              }}
+            >
+              Auto-calculated: {field.expression || '{field_a} + {field_b}'}
+            </Box>
+          </Box>
+        );
+
       case 'date':
         return (
           <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
@@ -510,17 +537,8 @@ export default function DraggableField({
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
               {field.label || 'Rich Text'}
             </Typography>
-            <Box
-              sx={{
-                height: 80,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 1,
-                color: 'text.secondary'
-              }}
-            >
-              {field.placeholder || 'Enter rich text...'}
+            <Box sx={{ height: 96, border: '1px dashed', borderColor: 'divider', borderRadius: 1, px: 2, py: 1, color: 'text.secondary' }}>
+              Rich text editor...
             </Box>
           </Box>
         );
@@ -531,23 +549,7 @@ export default function DraggableField({
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
               {field.label || 'Signature'}
             </Typography>
-            <Box
-              sx={{
-                width: field.width || 300,
-                height: field.height || 150,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'text.secondary',
-                bgcolor: 'grey.50'
-              }}
-            >
-              <Draw sx={{ fontSize: 32, color: 'text.secondary' }} />
-              <Typography variant="caption" sx={{ ml: 1 }}>Click to sign</Typography>
-            </Box>
+            <Box sx={{ height: 120, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }} />
           </Box>
         );
 
@@ -572,7 +574,7 @@ export default function DraggableField({
 
       case 'label':
         return (
-          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <Box sx={{ p: 1 }}>
             <Typography variant={field.variant || 'h6'} align={field.align || 'left'}>
               {field.label || 'Section Title'}
             </Typography>
@@ -581,257 +583,81 @@ export default function DraggableField({
 
       case 'divider':
         return (
-          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-            <Divider
-              textAlign={field.textAlign || 'center'}
-              variant={field.variant || 'fullWidth'}
-              orientation={field.orientation || 'horizontal'}
-              sx={{
-                ...(field.label && String(field.label).trim() !== '' ? {} : {
-                  borderColor: field.lineColor || 'divider',
-                  borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
-                  borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
-                }),
-                '&::before, &::after': {
-                  borderTopColor: field.lineColor || 'divider',
-                  borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
-                  borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
-                  borderColor: field.lineColor || 'divider'
-                }
-              }}
-            >
-              {field.label || ''}
-            </Divider>
+          <Box sx={{ p: 1 }}>
+            <Divider />
           </Box>
         );
 
       default:
         return (
           <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-              Unknown field type: {field.type}
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
+              {getFallbackTitleByType(field.type)}
             </Typography>
+            <Box sx={{ height: 32, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }} />
           </Box>
         );
     }
   };
 
   return (
-    <div>
-      <Paper
-        ref={drag}
-        sx={{
-          p: 1,
-          cursor: 'grab',
-          opacity: isDragging ? 0.5 : 1,
-          border: '2px solid',
-          borderColor: isSelected ? 'primary.main' : isOver ? 'primary.light' : 'transparent',
-          bgcolor: isSelected ? 'background.paper' : 'background.paper',
-          transition: 'all 0.2s ease',
-          '&:active': { cursor: 'grabbing' },
-          '&:hover': {
-            borderColor: 'primary.main',
-            boxShadow: 2
-          },
-          position: 'relative',
-          // Apply grid span styling
-          gridColumn: field.gridSpan && field.gridSpan > 1 ? `span ${field.gridSpan}` : undefined
-        }}
-        onClick={handleSelect}
-      >
-        {/* Field Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <DragIndicator 
-              sx={{ 
-                color: 'text.secondary', 
-                fontSize: 16
-              }} 
-            />
-            <FieldIcon sx={{ color: 'primary.main', fontSize: 16 }} />
-            <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.875rem' }}>
-              {(field.label && String(field.label).trim() !== '') ? field.label : getFallbackTitleByType(field.type)}
-            </Typography>
-            <Chip 
-              label={field.type} 
-              size="small" 
-              variant="outlined" 
-              sx={{ textTransform: 'capitalize', fontSize: '0.65rem', height: 16 }}
-            />
-            {field.required && (
-              <Chip 
-                label="Required" 
-                size="small" 
-                color="error" 
-                variant="outlined"
-                sx={{ fontSize: '0.65rem', height: 16 }}
-              />
-            )}
-            {/* Grid Span Indicator */}
-            {field.gridSpan && field.gridSpan > 1 && (
-              <Chip 
-                label={`${field.gridSpan} cols`} 
-                size="small" 
-                color="primary" 
-                variant="outlined"
-                sx={{ fontSize: '0.65rem', height: 16 }}
-              />
-            )}
-          </Box>
-          
-          <Stack direction="row" spacing={0.25}>
-            <IconButton
-              size="small"
-              onClick={handleMoveUp}
-              disabled={!canMoveUp}
-              sx={{ 
-                opacity: canMoveUp ? 1 : 0.3, 
-                padding: 0.5,
-                minWidth: 24,
-                minHeight: 24,
-                bgcolor: canMoveUp ? 'action.hover' : 'transparent',
-                '&:hover': {
-                  bgcolor: canMoveUp ? 'action.selected' : 'transparent'
-                }
-              }}
-            >
-              <KeyboardArrowUp sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleMoveDown}
-              disabled={!canMoveDown}
-              sx={{ 
-                opacity: canMoveDown ? 1 : 0.3, 
-                padding: 0.5,
-                minWidth: 24,
-                minHeight: 24,
-                bgcolor: canMoveDown ? 'action.hover' : 'transparent',
-                '&:hover': {
-                  bgcolor: canMoveDown ? 'action.selected' : 'transparent'
-                }
-              }}
-            >
-              <KeyboardArrowDown sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleMoveLeft}
-              disabled={!canMoveLeft}
-              sx={{ 
-                opacity: canMoveLeft ? 1 : 0.3, 
-                padding: 0.5,
-                minWidth: 24,
-                minHeight: 24,
-                bgcolor: canMoveLeft ? 'action.hover' : 'transparent',
-                '&:hover': {
-                  bgcolor: canMoveLeft ? 'action.selected' : 'transparent'
-                }
-              }}
-            >
-              <KeyboardArrowLeft sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleMoveRight}
-              disabled={!canMoveRight}
-              sx={{ 
-                opacity: canMoveRight ? 1 : 0.3, 
-                padding: 0.5,
-                minWidth: 24,
-                minHeight: 24,
-                bgcolor: canMoveRight ? 'action.hover' : 'transparent',
-                '&:hover': {
-                  bgcolor: canMoveRight ? 'action.selected' : 'transparent'
-                }
-              }}
-            >
-              <KeyboardArrowRight sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleDelete}
-              color="error"
-              sx={{ 
-                padding: 0.5,
-                minWidth: 24,
-                minHeight: 24,
-                '&:hover': {
-                  bgcolor: 'error.light'
-                }
-              }}
-            >
-              <Delete sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Stack>
+    <Paper
+      ref={drag}
+      onClick={handleSelect}
+      variant="outlined"
+      sx={{
+        p: 1,
+        borderColor: isSelected ? 'primary.main' : 'divider',
+        borderWidth: isSelected ? 2 : 1,
+        backgroundColor: isDragging ? 'action.hover' : 'background.paper',
+        opacity: isDragging ? 0.6 : 1,
+        position: 'relative',
+        cursor: 'move'
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <FieldIcon fontSize="small" />
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {field.label || getFallbackTitleByType(field.type)}
+        </Typography>
+      </Box>
+
+      {renderFieldPreview()}
+
+      {/* Controls */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <IconButton size="small" onClick={handleMoveUp} disabled={!canMoveUp}>
+            <KeyboardArrowUp />
+          </IconButton>
+          <IconButton size="small" onClick={handleMoveDown} disabled={!canMoveDown}>
+            <KeyboardArrowDown />
+          </IconButton>
+          <IconButton size="small" onClick={handleMoveLeft} disabled={!canMoveLeft}>
+            <KeyboardArrowLeft />
+          </IconButton>
+          <IconButton size="small" onClick={handleMoveRight} disabled={!canMoveRight}>
+            <KeyboardArrowRight />
+          </IconButton>
         </Box>
 
-        <Divider sx={{ mb: 1 }} />
-
-        {/* Field Preview */}
-        {renderFieldPreview()}
-
-        {/* Resize Handle */}
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 8,
-            cursor: 'col-resize',
-            backgroundColor: 'transparent',
-            opacity: isSelected ? 1 : 0,
-            transition: 'opacity 0.2s ease',
-            '&:hover': {
-              backgroundColor: 'primary.main',
-              opacity: 0.3
-            },
-            '&:active': {
-              backgroundColor: 'primary.main',
-              opacity: 0.5
-            }
-          }}
-          onMouseDown={handleResizeStart}
-        >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip size="small" label={`span ${field.gridSpan || 1}`} />
           <Box
+            onMouseDown={handleResizeStart}
             sx={{
-              position: 'absolute',
-              right: 2,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 4,
-              height: 20,
-              backgroundColor: 'primary.main',
-              borderRadius: 1,
-              opacity: 0.7
+              width: 16,
+              height: 16,
+              borderRadius: 0.5,
+              bgcolor: 'action.active',
+              cursor: 'ew-resize'
             }}
           />
+          <IconButton size="small" color="error" onClick={handleDelete}>
+            <Delete />
+          </IconButton>
         </Box>
-        
-        {/* Resize indicator during resize operation */}
-        {isResizing && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: 'primary.main',
-              color: 'white',
-              px: 2,
-              py: 1,
-              borderRadius: 1,
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              zIndex: 1000,
-              boxShadow: 2
-            }}
-          >
-            {field.gridSpan || 1} column{field.gridSpan !== 1 ? 's' : ''}
-          </Box>
-        )}
-      </Paper>
-    </div>
+      </Box>
+    </Paper>
   );
 } 

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
-import { useRef, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -19,6 +19,7 @@ import {
   Button,
   Select,
   Stepper,
+  Divider,
   Checkbox,
   MenuItem,
   TableRow,
@@ -35,8 +36,7 @@ import {
   FormHelperText,
   TableContainer,
   CircularProgress,
-  FormControlLabel,
-  Divider
+  FormControlLabel
 } from '@mui/material';
 
 export default function FormRenderer({ formData, onSubmit, isSubmitting = false }) {
@@ -262,6 +262,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
           break;
         case 'label':
         case 'divider':
+        case 'calculated':
           fieldSchema = z.any();
           break;
         default:
@@ -295,7 +296,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
     mode: 'onSubmit' // Only validate on form submission
   });
 
-  const { formState: { errors }, watch, setValue, trigger } = methods;
+  const { formState: { errors }, watch, setValue, trigger, getValues } = methods;
 
   const handleFormSubmit = async (data) => {
     try {
@@ -331,6 +332,212 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
     setValue(fieldId, value);
     setFormValues(prev => ({ ...prev, [fieldId]: value }));
   };
+
+  // ===== Calculated Fields Support =====
+  const calculatedFields = useMemo(
+    () => (formData.fields || []).filter(f => f.type === 'calculated'),
+    [formData.fields]
+  );
+
+  const safeEvaluateMathExpression = (expr) => {
+    const cleaned = String(expr || '').trim();
+    if (cleaned === '') return NaN;
+    // Only allow numbers, + - * / . ( ) and spaces
+    if (!/^[0-9+\-*/().\s]+$/.test(cleaned)) return NaN;
+    try {
+       
+      const fn = new Function(`"use strict"; return (${cleaned});`);
+      const result = fn();
+      return typeof result === 'number' && Number.isFinite(result) ? result : NaN;
+    } catch (e) {
+      return NaN;
+    }
+  };
+
+  const computeCalculatedValue = (field, values) => {
+    try {
+      const rawExpr = field.expression || '';
+      if (!rawExpr || typeof rawExpr !== 'string') return '';
+
+      const parseToNumber = (val) => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') {
+          const asNum = Number(val);
+          if (Number.isFinite(asNum)) return asNum;
+          const ts = Date.parse(val);
+          if (Number.isFinite(ts)) return ts;
+          return NaN;
+        }
+        if (val instanceof Date) return val.getTime();
+        if (val && typeof val === 'object' && typeof val.toISOString === 'function') {
+          const ts = Date.parse(val.toISOString());
+          if (Number.isFinite(ts)) return ts;
+        }
+        return NaN;
+      };
+
+      const parseToDate = (val) => {
+        if (val instanceof Date) return val;
+        if (typeof val === 'number' && Number.isFinite(val)) return new Date(val);
+        if (typeof val === 'string') {
+          const ts = Date.parse(val);
+          if (Number.isFinite(ts)) return new Date(ts);
+        }
+        if (val && typeof val === 'object' && typeof val.toISOString === 'function') {
+          const ts = Date.parse(val.toISOString());
+          if (Number.isFinite(ts)) return new Date(ts);
+        }
+        return null;
+      };
+
+      const resolveArg = (arg, currentValues) => {
+        const trimmed = String(arg).trim();
+        if (/^\{[^}]+\}$/.test(trimmed)) {
+          const key = trimmed.slice(1, -1).trim();
+          return currentValues?.[key];
+        }
+        if (/^TODAY|NOW$/i.test(trimmed)) return new Date();
+        const asNum = Number(trimmed);
+        if (Number.isFinite(asNum)) return asNum;
+        return trimmed;
+      };
+
+      // Expand helper functions first
+      let expr = rawExpr;
+
+      // AGE({dob})
+      expr = expr.replace(/AGE\s*\(\s*([^)]+)\s*\)/gi, (m, a) => {
+        const dob = parseToDate(resolveArg(a, values));
+        if (!dob) return '0';
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const mDiff = today.getMonth() - dob.getMonth();
+        if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) age -= 1;
+        return String(Math.max(0, age));
+      });
+
+      // YEARS_BETWEEN(a,b)
+      expr = expr.replace(/YEARS_BETWEEN\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/gi, (m, a, b) => {
+        const d1 = parseToDate(resolveArg(a, values));
+        const d2 = parseToDate(resolveArg(b, values));
+        if (!d1 || !d2) return '0';
+        return String((d2.getTime() - d1.getTime()) / 31557600000);
+      });
+
+      // MONTHS_BETWEEN(a,b)
+      expr = expr.replace(/MONTHS_BETWEEN\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/gi, (m, a, b) => {
+        const d1 = parseToDate(resolveArg(a, values));
+        const d2 = parseToDate(resolveArg(b, values));
+        if (!d1 || !d2) return '0';
+        let months = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+        if (d2.getDate() < d1.getDate()) months -= 1;
+        return String(months);
+      });
+
+      // DAYS_BETWEEN(a,b)
+      expr = expr.replace(/DAYS_BETWEEN\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/gi, (m, a, b) => {
+        const d1 = parseToDate(resolveArg(a, values));
+        const d2 = parseToDate(resolveArg(b, values));
+        if (!d1 || !d2) return '0';
+        return String((d2.getTime() - d1.getTime()) / 86400000);
+      });
+
+      // ADD_DAYS(date, n)
+      expr = expr.replace(/ADD_DAYS\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/gi, (m, a, n) => {
+        const base = parseToDate(resolveArg(a, values));
+        const days = Number(n);
+        if (!base || !Number.isFinite(days)) return '0';
+        const result = new Date(base.getTime());
+        result.setDate(result.getDate() + days);
+        return String(result.getTime());
+      });
+
+      // ADD_MONTHS(date, n)
+      expr = expr.replace(/ADD_MONTHS\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/gi, (m, a, n) => {
+        const base = parseToDate(resolveArg(a, values));
+        const months = Number(n);
+        if (!base || !Number.isFinite(months)) return '0';
+        const result = new Date(base.getTime());
+        result.setMonth(result.getMonth() + months);
+        return String(result.getTime());
+      });
+
+      // Replace {id} placeholders with numeric values
+      let replaced = expr.replace(/\{([^}]+)\}/g, (match, varName) => {
+        const key = String(varName).trim();
+        const num = parseToNumber(values?.[key]);
+        return Number.isFinite(num) ? String(num) : '0';
+      });
+
+      // Built-in tokens today/now
+      replaced = replaced.replace(/\bTODAY\b/gi, String(Date.now()));
+      replaced = replaced.replace(/\bNOW\b/gi, String(Date.now()));
+
+      const evalResult = safeEvaluateMathExpression(replaced);
+      if (!Number.isFinite(evalResult)) return '';
+      // If user wants date display, return timestamp as number
+      if (field.displayType === 'date') return Number(evalResult);
+      if (Number.isFinite(field.decimals)) return Number(evalResult.toFixed(field.decimals));
+      return evalResult;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const formatCalculatedForDisplay = (field, value) => {
+    if (value === '' || value === null || value === undefined) return '';
+    if (field.displayType === 'date') {
+      const ts = Number(value);
+      if (!Number.isFinite(ts)) return '';
+      const d = new Date(ts);
+      const fmt = field.dateFormat || 'MM/DD/YYYY';
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yyyy = String(d.getFullYear());
+      return fmt.replace('MM', mm).replace('DD', dd).replace('YYYY', yyyy);
+    }
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '';
+    const body = Number.isFinite(field.decimals) ? num.toFixed(field.decimals) : String(num);
+    return `${field.prefix || ''}${body}${field.suffix || ''}`;
+  };
+
+  // Subscribe to changes and update calculated fields
+  useEffect(() => {
+    const subscription = watch((values) => {
+      if (!calculatedFields || calculatedFields.length === 0) return;
+      calculatedFields.forEach((field) => {
+        // Avoid self-referencing expressions like {this_field}
+        if (typeof field.expression === 'string' && field.expression.includes(`{${field.id}}`)) {
+          return;
+        }
+        const computed = computeCalculatedValue(field, values);
+        const currentVal = values?.[field.id];
+        // Only set if value actually changed to prevent watch loops
+        const changed = (Number.isFinite(computed) || computed === '') ? computed !== currentVal : false;
+        if (changed) {
+          setValue(field.id, computed === '' ? '' : computed, { shouldValidate: false, shouldDirty: false });
+        }
+      });
+    });
+    return () => subscription.unsubscribe && subscription.unsubscribe();
+  }, [watch, setValue, calculatedFields]);
+
+  // Initialize calculated values once on mount or when fields change
+  useEffect(() => {
+    if (!calculatedFields || calculatedFields.length === 0) return;
+    const values = getValues();
+    calculatedFields.forEach((field) => {
+      if (typeof field.expression === 'string' && field.expression.includes(`{${field.id}}`)) {
+        return;
+      }
+      const computed = computeCalculatedValue(field, values);
+      const currentVal = values?.[field.id];
+      if ((Number.isFinite(computed) || computed === '') && computed !== currentVal) {
+        setValue(field.id, computed === '' ? '' : computed, { shouldValidate: false, shouldDirty: false });
+      }
+    });
+  }, [calculatedFields, getValues, setValue]);
 
   const handleSignatureChange = (fieldId, signatureData) => {
     setSignatures(prev => ({ ...prev, [fieldId]: signatureData }));
@@ -965,6 +1172,18 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 }
               }
             }}
+          />
+        );
+
+      case 'calculated':
+        return (
+          <TextField
+            value={formatCalculatedForDisplay(field, watch(field.id))}
+            fullWidth
+            disabled
+            InputProps={{ readOnly: true }}
+            placeholder={field.placeholder || 'Auto-calculated'}
+            sx={{ width: field.width || '100%' }}
           />
         );
 
