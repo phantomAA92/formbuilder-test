@@ -168,10 +168,21 @@ export default function FormBuilder({
           return;
         }
         
-        const updatedFields = currentFields.map(field => 
-          field.id === fieldId ? { ...field, ...updates } : field
+        const existingField = currentFields.find((f) => f.id === fieldId);
+        if (!existingField) {
+          console.error('Field not found for update:', fieldId);
+          return;
+        }
+        const updatedField = { ...existingField, ...updates };
+        const updatedFields = currentFields.map((field) =>
+          field.id === fieldId ? updatedField : field
         );
         onUpdateField && onUpdateField('fields', updatedFields);
+
+        // If the field id changed, update the selected field reference so further edits apply
+        if (updates && typeof updates === 'object' && 'id' in updates && updates.id && updates.id !== fieldId) {
+          onSelectField && onSelectField(updatedField);
+        }
       }
     } catch (error) {
       console.error('Error updating field:', String(error));
@@ -276,6 +287,7 @@ export default function FormBuilder({
             {selectedField ? (
               <FieldPropertiesPanel
                 field={selectedField}
+                availableFields={safeFormData.fields}
                 onUpdate={(updates) => handleFieldUpdate(selectedField.id, updates)}
               />
             ) : (

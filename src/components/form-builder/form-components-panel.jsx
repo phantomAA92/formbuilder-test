@@ -18,7 +18,8 @@ import {
   ArrowDropDown,
   CalendarToday,
   HorizontalRule,
-  RadioButtonChecked
+  RadioButtonChecked,
+  Calculate
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -34,6 +35,7 @@ const formComponents = [
   { type: 'checkbox', label: 'Checkboxes', icon: CheckBox, description: 'Multiple choice selection' },
   { type: 'dropdown', label: 'Dropdown', icon: ArrowDropDown, description: 'Select from options' },
   { type: 'number', label: 'Number Input', icon: LooksOne, description: 'Numeric input field' },
+  { type: 'calculated', label: 'Calculated', icon: Calculate, description: 'Auto-calculated from other fields' },
   { type: 'date', label: 'Date Picker', icon: CalendarToday, description: 'Date selection' },
   { type: 'attachment', label: 'File Upload', icon: AttachFile, description: 'File attachment' },
   { type: 'link', label: 'Link Input', icon: Link, description: 'URL input field' },
@@ -84,6 +86,8 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Dropdown', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
       case 'number':
         return { label: 'Number', placeholder: 'Enter number...', min: 0, max: 999999, required: false };
+      case 'calculated':
+        return { label: 'Calculated', expression: '{field_a} + {field_b}', decimals: 2, prefix: '', suffix: '', displayType: 'number', dateFormat: 'MM/DD/YYYY', required: false };
       case 'date':
         return { label: 'Date', required: false };
       case 'attachment':
