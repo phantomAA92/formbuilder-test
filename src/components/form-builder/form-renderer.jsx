@@ -184,6 +184,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
         case 'textarea':
         case 'link':
         case 'richtext':
+        case 'phone':
           fieldSchema = z.string();
           if (field.required) {
             fieldSchema = fieldSchema.min(1, `${field.label} is required`);
@@ -777,6 +778,40 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 }
               }
             }}
+          />
+        );
+
+      case 'phone':
+        return (
+          <TextField
+            label={field.label}
+            type="tel"
+            placeholder={field.placeholder || 'e.g., +1 (555) 123-4567'}
+            value={watch(field.id) || ''}
+            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            fullWidth
+            required={field.required}
+            disabled={field.disabled}
+            error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
+            inputProps={{ inputMode: 'tel' }}
           />
         );
 

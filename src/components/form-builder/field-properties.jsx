@@ -671,6 +671,7 @@ export default function FieldProperties({ field, onUpdate }) {
                                     <MenuItem value="text">Text Input</MenuItem>
                                     <MenuItem value="textarea">Text Area</MenuItem>
                                     <MenuItem value="email">Email</MenuItem>
+                                    <MenuItem value="phone">Phone Number</MenuItem>
                                     <MenuItem value="number">Number</MenuItem>
                                     <MenuItem value="date">Date</MenuItem>
                                     <MenuItem value="radio">Radio Buttons</MenuItem>

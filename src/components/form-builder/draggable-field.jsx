@@ -31,7 +31,8 @@ import {
   KeyboardArrowRight,
   RadioButtonChecked,
   Title,
-  HorizontalRule
+  HorizontalRule,
+  Phone
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -53,13 +54,15 @@ const fieldIcons = {
   signature: Draw,
   wizard: ViewTimeline,
   label: Title,
-  divider: HorizontalRule
+  divider: HorizontalRule,
+  phone: Phone
 };
 
 function getFallbackTitleByType(type) {
   const titles = {
     text: 'Text Input',
     email: 'Email Input',
+    phone: 'Phone Number',
     textarea: 'Text Area',
     radio: 'Radio Buttons',
     checkbox: 'Checkboxes',
@@ -238,6 +241,30 @@ export default function DraggableField({
               }}
             >
               {field.placeholder || 'Enter email address...'}
+            </Box>
+          </Box>
+        );
+
+      case 'phone':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
+              {field.label || 'Phone Number'}
+            </Typography>
+            <Box
+              sx={{
+                height: 32,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 1,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'text.secondary',
+                fontSize: '0.75rem'
+              }}
+            >
+              {field.placeholder || 'e.g., +1 (555) 123-4567'}
             </Box>
           </Box>
         );

@@ -5,19 +5,20 @@ import {
   Link, 
   Draw, 
   Email,
-  Subject, 
+  Title, 
+  Phone, 
+  Subject,
   CheckBox, 
-  LooksOne,
-  AttachFile, 
+  LooksOne, 
+  AttachFile,
   TableChart, 
-  TextFields,
-  Description, 
-  ViewTimeline, 
+  TextFields, 
+  Description,
+  ViewTimeline,
   ArrowDropDown,
   CalendarToday,
-  RadioButtonChecked,
-  Title,
-  HorizontalRule
+  HorizontalRule,
+  RadioButtonChecked
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -27,6 +28,7 @@ const ItemTypes = {
 const formComponents = [
   { type: 'text', label: 'Text Input', icon: TextFields, description: 'Single line text input' },
   { type: 'email', label: 'Email Input', icon: Email, description: 'Email address input' },
+  { type: 'phone', label: 'Phone Number', icon: Phone, description: 'Telephone input' },
   { type: 'textarea', label: 'Text Area', icon: Subject, description: 'Multi-line text input' },
   { type: 'radio', label: 'Radio Buttons', icon: RadioButtonChecked, description: 'Single choice selection' },
   { type: 'checkbox', label: 'Checkboxes', icon: CheckBox, description: 'Multiple choice selection' },
@@ -70,6 +72,8 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Text Input', placeholder: 'Enter text...', required: false };
       case 'email':
         return { label: 'Email Input', placeholder: 'Enter email address...', required: false };
+      case 'phone':
+        return { label: 'Phone Number', placeholder: 'e.g., +1 (555) 123-4567', pattern: '^\\+?[0-9\\s()-]{7,20}$', errorMessage: 'Enter a valid phone number', required: false };
       case 'textarea':
         return { label: 'Text Area', placeholder: 'Enter text...', rows: 4, required: false };
       case 'radio':
