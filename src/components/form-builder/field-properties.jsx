@@ -802,7 +802,7 @@ export default function FieldProperties({ field, onUpdate }) {
                                           size="small"
                                           label="Rows"
                                           type="number"
-                                                                                      value={stepField.rows || 4}
+                                          value={stepField.rows || 4}
                                           onChange={(e) => {
                                             const updatedFields = [...(step.fields || [])];
                                             updatedFields[fieldIndex] = { ...updatedFields[fieldIndex], rows: parseInt(e.target.value) || 4 };
@@ -925,6 +925,118 @@ export default function FieldProperties({ field, onUpdate }) {
                   fullWidth
                   size="small"
                   type="color"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'label':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Label Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <Select
+                  size="small"
+                  value={localField.variant || 'h6'}
+                  onChange={(e) => handleChange('variant', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="h4">H4</MenuItem>
+                  <MenuItem value="h5">H5</MenuItem>
+                  <MenuItem value="h6">H6</MenuItem>
+                  <MenuItem value="subtitle1">Subtitle 1</MenuItem>
+                  <MenuItem value="body1">Body 1</MenuItem>
+                  <MenuItem value="body2">Body 2</MenuItem>
+                </Select>
+                <Select
+                  size="small"
+                  value={localField.align || 'left'}
+                  onChange={(e) => handleChange('align', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="left">Left</MenuItem>
+                  <MenuItem value="center">Center</MenuItem>
+                  <MenuItem value="right">Right</MenuItem>
+                </Select>
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'divider':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Divider Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Divider Text (optional)"
+                  value={localField.label || ''}
+                  onChange={(e) => handleChange('label', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <Select
+                  size="small"
+                  value={localField.variant || 'fullWidth'}
+                  onChange={(e) => handleChange('variant', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="fullWidth">Full Width</MenuItem>
+                  <MenuItem value="inset">Inset</MenuItem>
+                  <MenuItem value="middle">Middle</MenuItem>
+                </Select>
+                <Select
+                  size="small"
+                  value={localField.textAlign || 'center'}
+                  onChange={(e) => handleChange('textAlign', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="left">Left</MenuItem>
+                  <MenuItem value="center">Center</MenuItem>
+                  <MenuItem value="right">Right</MenuItem>
+                </Select>
+                <Select
+                  size="small"
+                  value={localField.orientation || 'horizontal'}
+                  onChange={(e) => handleChange('orientation', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="horizontal">Horizontal</MenuItem>
+                  <MenuItem value="vertical">Vertical</MenuItem>
+                </Select>
+                <Select
+                  size="small"
+                  value={localField.lineStyle || 'solid'}
+                  onChange={(e) => handleChange('lineStyle', e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="solid">Solid</MenuItem>
+                  <MenuItem value="dashed">Dashed</MenuItem>
+                  <MenuItem value="dotted">Dotted</MenuItem>
+                </Select>
+                <TextField
+                  label="Line Color"
+                  type="color"
+                  value={localField.lineColor || '#bdbdbd'}
+                  onChange={(e) => handleChange('lineColor', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Line Thickness (px)"
+                  type="number"
+                  value={localField.lineThickness || 1}
+                  onChange={(e) => handleChange('lineThickness', parseInt(e.target.value) || 1)}
+                  fullWidth
+                  size="small"
+                  inputProps={{ min: 1, max: 8 }}
                 />
               </Stack>
             </AccordionDetails>

@@ -15,7 +15,9 @@ import {
   ViewTimeline, 
   ArrowDropDown,
   CalendarToday,
-  RadioButtonChecked
+  RadioButtonChecked,
+  Title,
+  HorizontalRule
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -35,6 +37,8 @@ const formComponents = [
   { type: 'link', label: 'Link Input', icon: Link, description: 'URL input field' },
   { type: 'table', label: 'Table', icon: TableChart, description: 'Data table input' },
   { type: 'richtext', label: 'Rich Text', icon: Description, description: 'Rich text editor' },
+  { type: 'label', label: 'Label', icon: Title, description: 'Static text or heading' },
+  { type: 'divider', label: 'Divider', icon: HorizontalRule, description: 'Visual separator' },
   { type: 'signature', label: 'Signature', icon: Draw, description: 'Digital signature capture' },
   { type: 'wizard', label: 'Multi-Step Wizard', icon: ViewTimeline, description: 'Multi-step form wizard' }
 ];
@@ -86,6 +90,10 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Table', columns: ['Column 1', 'Column 2'], rows: 3, required: false };
       case 'richtext':
         return { label: 'Rich Text', placeholder: 'Enter rich text...', required: false };
+      case 'label':
+        return { label: 'Section Title', variant: 'h6', align: 'left', required: false };
+      case 'divider':
+        return { label: '', variant: 'fullWidth', textAlign: 'center', orientation: 'horizontal', lineStyle: 'dotted', lineColor: '#bdbdbd', lineThickness: 1, required: false };
       case 'signature':
         return { label: 'Signature', width: 300, height: 150, penColor: '#000000', required: false };
       case 'wizard':

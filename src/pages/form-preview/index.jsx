@@ -34,8 +34,8 @@ export default function FormPreviewPage() {
             gridColumns: parsedData.gridColumns || 2,
             fields: Array.isArray(parsedData.fields) ? parsedData.fields.map(field => ({
               ...field,
-                             id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
-              label: field.label || 'Field',
+              id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
+              label: field.type === 'divider' ? (field.label || '') : (field.label || 'Field'),
               type: field.type || 'text',
               required: field.required || false,
               placeholder: field.placeholder || '',

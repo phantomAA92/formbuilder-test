@@ -35,7 +35,8 @@ import {
   FormHelperText,
   TableContainer,
   CircularProgress,
-  FormControlLabel
+  FormControlLabel,
+  Divider
 } from '@mui/material';
 
 export default function FormRenderer({ formData, onSubmit, isSubmitting = false }) {
@@ -257,6 +258,10 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             // Optional file - can be null, File, or FileList
             fieldSchema = z.any().nullable();
           }
+          break;
+        case 'label':
+        case 'divider':
+          fieldSchema = z.any();
           break;
         default:
           fieldSchema = z.string();
@@ -1225,6 +1230,30 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               </FormHelperText>
             )}
           </Box>
+        );
+
+      case 'label':
+        return (
+          <Typography variant={field.variant || 'h6'} align={field.align || 'left'} sx={{ width: field.width || '100%' }}>
+            {field.label}
+          </Typography>
+        );
+
+      case 'divider':
+        return (
+          <Divider
+            textAlign={field.textAlign || 'center'}
+            variant={field.variant || 'fullWidth'}
+            orientation={field.orientation || 'horizontal'}
+            sx={{
+              my: 1,
+              borderColor: field.lineColor || 'divider',
+              borderStyle: field.lineStyle || 'solid',
+              borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+            }}
+          >
+            {field.label || ''}
+          </Divider>
         );
 
       default:

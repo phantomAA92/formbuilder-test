@@ -29,7 +29,9 @@ import {
   KeyboardArrowDown,
   KeyboardArrowLeft,
   KeyboardArrowRight,
-  RadioButtonChecked
+  RadioButtonChecked,
+  Title,
+  HorizontalRule
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -49,8 +51,32 @@ const fieldIcons = {
   table: TableChart,
   richtext: Description,
   signature: Draw,
-  wizard: ViewTimeline
+  wizard: ViewTimeline,
+  label: Title,
+  divider: HorizontalRule
 };
+
+function getFallbackTitleByType(type) {
+  const titles = {
+    text: 'Text Input',
+    email: 'Email Input',
+    textarea: 'Text Area',
+    radio: 'Radio Buttons',
+    checkbox: 'Checkboxes',
+    dropdown: 'Dropdown',
+    number: 'Number',
+    date: 'Date',
+    attachment: 'File Upload',
+    link: 'Link',
+    table: 'Table',
+    richtext: 'Rich Text',
+    signature: 'Signature',
+    wizard: 'Multi-Step Wizard',
+    label: 'Label',
+    divider: 'Divider'
+  };
+  return titles[type] || 'Untitled Field';
+}
 
 export default function DraggableField({
   field,
@@ -517,6 +543,33 @@ export default function DraggableField({
           </Box>
         );
 
+      case 'label':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Typography variant={field.variant || 'h6'} align={field.align || 'left'}>
+              {field.label || 'Section Title'}
+            </Typography>
+          </Box>
+        );
+
+      case 'divider':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Divider
+              textAlign={field.textAlign || 'center'}
+              variant={field.variant || 'fullWidth'}
+              orientation={field.orientation || 'horizontal'}
+              sx={{
+                borderColor: field.lineColor || 'divider',
+                borderStyle: field.lineStyle || 'solid',
+                borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+              }}
+            >
+              {field.label || ''}
+            </Divider>
+          </Box>
+        );
+
       default:
         return (
           <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
@@ -562,7 +615,7 @@ export default function DraggableField({
             />
             <FieldIcon sx={{ color: 'primary.main', fontSize: 16 }} />
             <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.875rem' }}>
-              {field.label || 'Untitled Field'}
+              {(field.label && String(field.label).trim() !== '') ? field.label : getFallbackTitleByType(field.type)}
             </Typography>
             <Chip 
               label={field.type} 
