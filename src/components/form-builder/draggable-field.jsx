@@ -29,7 +29,10 @@ import {
   KeyboardArrowDown,
   KeyboardArrowLeft,
   KeyboardArrowRight,
-  RadioButtonChecked
+  RadioButtonChecked,
+  Title,
+  HorizontalRule,
+  Phone
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -49,8 +52,34 @@ const fieldIcons = {
   table: TableChart,
   richtext: Description,
   signature: Draw,
-  wizard: ViewTimeline
+  wizard: ViewTimeline,
+  label: Title,
+  divider: HorizontalRule,
+  phone: Phone
 };
+
+function getFallbackTitleByType(type) {
+  const titles = {
+    text: 'Text Input',
+    email: 'Email Input',
+    phone: 'Phone Number',
+    textarea: 'Text Area',
+    radio: 'Radio Buttons',
+    checkbox: 'Checkboxes',
+    dropdown: 'Dropdown',
+    number: 'Number',
+    date: 'Date',
+    attachment: 'File Upload',
+    link: 'Link',
+    table: 'Table',
+    richtext: 'Rich Text',
+    signature: 'Signature',
+    wizard: 'Multi-Step Wizard',
+    label: 'Label',
+    divider: 'Divider'
+  };
+  return titles[type] || 'Untitled Field';
+}
 
 export default function DraggableField({
   field,
@@ -212,6 +241,30 @@ export default function DraggableField({
               }}
             >
               {field.placeholder || 'Enter email address...'}
+            </Box>
+          </Box>
+        );
+
+      case 'phone':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500, fontSize: '0.875rem' }}>
+              {field.label || 'Phone Number'}
+            </Typography>
+            <Box
+              sx={{
+                height: 32,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 1,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'text.secondary',
+                fontSize: '0.75rem'
+              }}
+            >
+              {field.placeholder || 'e.g., +1 (555) 123-4567'}
             </Box>
           </Box>
         );
@@ -517,6 +570,41 @@ export default function DraggableField({
           </Box>
         );
 
+      case 'label':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Typography variant={field.variant || 'h6'} align={field.align || 'left'}>
+              {field.label || 'Section Title'}
+            </Typography>
+          </Box>
+        );
+
+      case 'divider':
+        return (
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Divider
+              textAlign={field.textAlign || 'center'}
+              variant={field.variant || 'fullWidth'}
+              orientation={field.orientation || 'horizontal'}
+              sx={{
+                ...(field.label && String(field.label).trim() !== '' ? {} : {
+                  borderColor: field.lineColor || 'divider',
+                  borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                  borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+                }),
+                '&::before, &::after': {
+                  borderTopColor: field.lineColor || 'divider',
+                  borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                  borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
+                  borderColor: field.lineColor || 'divider'
+                }
+              }}
+            >
+              {field.label || ''}
+            </Divider>
+          </Box>
+        );
+
       default:
         return (
           <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
@@ -562,7 +650,7 @@ export default function DraggableField({
             />
             <FieldIcon sx={{ color: 'primary.main', fontSize: 16 }} />
             <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.875rem' }}>
-              {field.label || 'Untitled Field'}
+              {(field.label && String(field.label).trim() !== '') ? field.label : getFallbackTitleByType(field.type)}
             </Typography>
             <Chip 
               label={field.type} 

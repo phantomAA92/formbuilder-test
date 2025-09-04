@@ -5,16 +5,19 @@ import {
   Link, 
   Draw, 
   Email,
-  Subject, 
+  Title, 
+  Phone, 
+  Subject,
   CheckBox, 
-  LooksOne,
-  AttachFile, 
+  LooksOne, 
+  AttachFile,
   TableChart, 
-  TextFields,
-  Description, 
-  ViewTimeline, 
+  TextFields, 
+  Description,
+  ViewTimeline,
   ArrowDropDown,
   CalendarToday,
+  HorizontalRule,
   RadioButtonChecked
 } from '@mui/icons-material';
 
@@ -25,6 +28,7 @@ const ItemTypes = {
 const formComponents = [
   { type: 'text', label: 'Text Input', icon: TextFields, description: 'Single line text input' },
   { type: 'email', label: 'Email Input', icon: Email, description: 'Email address input' },
+  { type: 'phone', label: 'Phone Number', icon: Phone, description: 'Telephone input' },
   { type: 'textarea', label: 'Text Area', icon: Subject, description: 'Multi-line text input' },
   { type: 'radio', label: 'Radio Buttons', icon: RadioButtonChecked, description: 'Single choice selection' },
   { type: 'checkbox', label: 'Checkboxes', icon: CheckBox, description: 'Multiple choice selection' },
@@ -35,6 +39,8 @@ const formComponents = [
   { type: 'link', label: 'Link Input', icon: Link, description: 'URL input field' },
   { type: 'table', label: 'Table', icon: TableChart, description: 'Data table input' },
   { type: 'richtext', label: 'Rich Text', icon: Description, description: 'Rich text editor' },
+  { type: 'label', label: 'Label', icon: Title, description: 'Static text or heading' },
+  { type: 'divider', label: 'Divider', icon: HorizontalRule, description: 'Visual separator' },
   { type: 'signature', label: 'Signature', icon: Draw, description: 'Digital signature capture' },
   { type: 'wizard', label: 'Multi-Step Wizard', icon: ViewTimeline, description: 'Multi-step form wizard' }
 ];
@@ -66,6 +72,8 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Text Input', placeholder: 'Enter text...', required: false };
       case 'email':
         return { label: 'Email Input', placeholder: 'Enter email address...', required: false };
+      case 'phone':
+        return { label: 'Phone Number', placeholder: 'e.g., +1 (555) 123-4567', pattern: '^\\+?[0-9\\s()-]{7,20}$', errorMessage: 'Enter a valid phone number', required: false };
       case 'textarea':
         return { label: 'Text Area', placeholder: 'Enter text...', rows: 4, required: false };
       case 'radio':
@@ -86,6 +94,10 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Table', columns: ['Column 1', 'Column 2'], rows: 3, required: false };
       case 'richtext':
         return { label: 'Rich Text', placeholder: 'Enter rich text...', required: false };
+      case 'label':
+        return { label: 'Section Title', variant: 'h6', align: 'left', required: false };
+      case 'divider':
+        return { label: '', variant: 'fullWidth', textAlign: 'center', orientation: 'horizontal', lineStyle: 'dotted', lineColor: '#bdbdbd', lineThickness: 1, required: false };
       case 'signature':
         return { label: 'Signature', width: 300, height: 150, penColor: '#000000', required: false };
       case 'wizard':

@@ -35,7 +35,8 @@ import {
   FormHelperText,
   TableContainer,
   CircularProgress,
-  FormControlLabel
+  FormControlLabel,
+  Divider
 } from '@mui/material';
 
 export default function FormRenderer({ formData, onSubmit, isSubmitting = false }) {
@@ -183,6 +184,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
         case 'textarea':
         case 'link':
         case 'richtext':
+        case 'phone':
           fieldSchema = z.string();
           if (field.required) {
             fieldSchema = fieldSchema.min(1, `${field.label} is required`);
@@ -257,6 +259,10 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             // Optional file - can be null, File, or FileList
             fieldSchema = z.any().nullable();
           }
+          break;
+        case 'label':
+        case 'divider':
+          fieldSchema = z.any();
           break;
         default:
           fieldSchema = z.string();
@@ -486,33 +492,40 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                   const gridColumns = formData.gridColumns || 2;
                   const gridLayout = organizeFieldsInGrid(formData.fields, gridColumns);
                   return (
-                    <Box sx={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-                      gap: 3
-                    }}>
-                      {gridLayout.map((row, rowIndex) => 
-                        row.map((cell, colIndex) => {
-                          if (!cell || cell === 'spanned') {
-                            return <Box key={`${rowIndex}-${colIndex}`} />;
-                          }
-                          
-                          const field = cell;
-                          const fieldSpan = field.gridSpan || 1;
-                          
-                          return (
-                            <Box 
-                              key={`${rowIndex}-${colIndex}`}
-                              sx={{
-                                gridColumn: fieldSpan > 1 ? `span ${fieldSpan}` : undefined,
-                                mb: 3
-                              }}
-                            >
-                              {renderField(field)}
-                            </Box>
-                          );
-                        })
-                      )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {gridLayout.map((row, rowIndex) => (
+                        <Box
+                          key={`row-${rowIndex}`}
+                          sx={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+                            gap: 3
+                          }}
+                        >
+                          {row.map((cell, colIndex) => {
+                            if (cell === 'spanned') {
+                              return null;
+                            }
+                            if (!cell) {
+                              return <Box key={`${rowIndex}-${colIndex}`} />;
+                            }
+                            
+                            const field = cell;
+                            const fieldSpan = field.gridSpan || 1;
+                            
+                            return (
+                              <Box 
+                                key={`${rowIndex}-${colIndex}`}
+                                sx={{
+                                  gridColumn: fieldSpan > 1 ? `span ${fieldSpan}` : undefined
+                                }}
+                              >
+                                {renderField(field)}
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      ))}
                     </Box>
                   );
                 } else {
@@ -772,6 +785,40 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 }
               }
             }}
+          />
+        );
+
+      case 'phone':
+        return (
+          <TextField
+            label={field.label}
+            type="tel"
+            placeholder={field.placeholder || 'e.g., +1 (555) 123-4567'}
+            value={watch(field.id) || ''}
+            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            fullWidth
+            required={field.required}
+            disabled={field.disabled}
+            error={!!errors[field.id]}
+            helperText={errors[field.id]?.message}
+            sx={{ 
+              width: field.width || '100%',
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-error': {
+                  '& fieldset': {
+                    borderColor: 'error.main',
+                    borderWidth: '2px'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'error.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'error.main'
+                  }
+                }
+              }
+            }}
+            inputProps={{ inputMode: 'tel' }}
           />
         );
 
@@ -1225,6 +1272,38 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
               </FormHelperText>
             )}
           </Box>
+        );
+
+      case 'label':
+        return (
+          <Typography variant={field.variant || 'h6'} align={field.align || 'left'} sx={{ width: field.width || '100%' }}>
+            {field.label}
+          </Typography>
+        );
+
+      case 'divider':
+        return (
+          <Divider
+            textAlign={field.textAlign || 'center'}
+            variant={field.variant || 'fullWidth'}
+            orientation={field.orientation || 'horizontal'}
+            sx={{
+              my: 1,
+              ...(field.label && String(field.label).trim() !== '' ? {} : {
+                borderColor: field.lineColor || 'divider',
+                borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
+              }),
+              '&::before, &::after': {
+                borderTopColor: field.lineColor || 'divider',
+                borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
+                borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
+                borderColor: field.lineColor || 'divider'
+              }
+            }}
+          >
+            {field.label || ''}
+          </Divider>
         );
 
       default:
