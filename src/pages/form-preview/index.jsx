@@ -26,7 +26,7 @@ export default function FormPreviewPage() {
         
         // Validate and sanitize the parsed data
         if (parsedData && typeof parsedData === 'object') {
-          const gridCols = parsedData.gridColumns || 2;
+          const gridCols = 2;
           // Build sanitized fields with non-overlapping placement
           const sanitizedFields = [];
           const occupied = new Map(); // row -> boolean[]
@@ -77,6 +77,33 @@ export default function FormPreviewPage() {
             return { row: Math.max(0, desiredRow || 0), col: 0 };
           };
 
+          // Helper: sanitize nested wizard step field
+          const sanitizeStepField = (stepField) => {
+            const baseType = (stepField && stepField.type) ? stepField.type : 'text';
+            const baseId = (stepField && stepField.id) ? stepField.id : `field_${Math.random().toString(36).substring(2, 11)}`;
+            // Wizard steps are rendered in 2 columns; clamp span accordingly
+            const wizardCols = 2;
+            const rawSpan = stepField?.gridSpan ?? 1;
+            const safeSpan = Math.max(1, Math.min(wizardCols, Number(rawSpan) || 1));
+            const safe = {
+              ...stepField,
+              id: baseId,
+              type: baseType,
+              label: baseType === 'divider' ? (stepField?.label || '') : (stepField?.label || 'Field'),
+              required: !!stepField?.required,
+              placeholder: stepField?.placeholder || '',
+              gridSpan: safeSpan
+            };
+            if (baseType === 'radio' || baseType === 'checkbox' || baseType === 'dropdown') {
+              safe.options = Array.isArray(stepField?.options) ? stepField.options : [];
+            }
+            if (baseType === 'table') {
+              safe.columns = Array.isArray(stepField?.columns) ? stepField.columns : ['Column 1', 'Column 2'];
+              safe.rows = Number.isFinite(stepField?.rows) ? stepField.rows : 3;
+            }
+            return safe;
+          };
+
           if (Array.isArray(parsedData.fields)) {
             parsedData.fields.forEach((field, idx) => {
               const rawSpan = field?.gridSpan ?? 1;
@@ -87,7 +114,7 @@ export default function FormPreviewPage() {
               const { row: placedRow, col: placedCol } = findPlacement(desiredRow, desiredCol, safeSpan);
               markOccupied(placedRow, placedCol, safeSpan);
 
-              sanitizedFields.push({
+              const sanitized = {
                 ...field,
                 id: field.id || `field_${Math.random().toString(36).substring(2, 11)}`,
                 label: field.type === 'divider' ? (field.label || '') : (field.label || 'Field'),
@@ -96,10 +123,19 @@ export default function FormPreviewPage() {
                 placeholder: field.placeholder || '',
                 options: Array.isArray(field.options) ? field.options : [],
                 columns: Array.isArray(field.columns) ? field.columns : [],
-                steps: Array.isArray(field.steps) ? field.steps : [],
+                steps: Array.isArray(field.steps)
+                  ? field.steps.map((step) => ({
+                      ...step,
+                      fields: Array.isArray(step?.fields)
+                        ? step.fields.map((sf) => sanitizeStepField(sf))
+                        : []
+                    }))
+                  : [],
                 gridSpan: safeSpan,
                 position: { row: placedRow, col: placedCol }
-              });
+              };
+
+              sanitizedFields.push(sanitized);
             });
           }
 

@@ -10,16 +10,16 @@ import {
   Subject,
   CheckBox, 
   LooksOne, 
-  AttachFile,
+  Calculate,
+  AttachFile, 
   TableChart, 
-  TextFields, 
+  TextFields,
   Description,
   ViewTimeline,
   ArrowDropDown,
   CalendarToday,
   HorizontalRule,
-  RadioButtonChecked,
-  Calculate
+  RadioButtonChecked
 } from '@mui/icons-material';
 
 const ItemTypes = {
@@ -35,6 +35,7 @@ const formComponents = [
   { type: 'checkbox', label: 'Checkboxes', icon: CheckBox, description: 'Multiple choice selection' },
   { type: 'dropdown', label: 'Dropdown', icon: ArrowDropDown, description: 'Select from options' },
   { type: 'number', label: 'Number Input', icon: LooksOne, description: 'Numeric input field' },
+  { type: 'quantity', label: 'Quantity', icon: LooksOne, description: 'Counter with +/- buttons' },
   { type: 'calculated', label: 'Calculated', icon: Calculate, description: 'Auto-calculated from other fields' },
   { type: 'date', label: 'Date Picker', icon: CalendarToday, description: 'Date selection' },
   { type: 'attachment', label: 'File Upload', icon: AttachFile, description: 'File attachment' },
@@ -86,6 +87,8 @@ function DraggableComponent({ component, onAddField }) {
         return { label: 'Dropdown', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
       case 'number':
         return { label: 'Number', placeholder: 'Enter number...', min: 0, max: 999999, required: false };
+      case 'quantity':
+        return { label: 'Quantity', min: 0, max: 9999, step: 1, defaultValue: 0, required: false };
       case 'calculated':
         return { label: 'Calculated', expression: '{field_a} + {field_b}', decimals: 2, prefix: '', suffix: '', displayType: 'number', dateFormat: 'MM/DD/YYYY', required: false };
       case 'date':

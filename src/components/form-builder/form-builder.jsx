@@ -108,6 +108,11 @@ export default function FormBuilder({
       ...defaultData
     };
     
+    // If a wizard is added, switch grid to a single column
+    if (componentType === 'wizard') {
+      onUpdateField && onUpdateField('gridColumns', 1);
+    }
+    
     const updatedFields = [...currentFields, newField];
     onUpdateField && onUpdateField('fields', updatedFields);
   };
