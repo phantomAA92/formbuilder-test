@@ -107,6 +107,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                   }
                   break;
                 case 'number':
+                case 'quantity':
                   fieldSchema = z.number().min(stepField.min || -Infinity).max(stepField.max || Infinity);
                   break;
                 case 'date':
@@ -215,6 +216,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
           }
           break;
         case 'number':
+        case 'quantity':
           fieldSchema = z.number().min(field.min || -Infinity).max(field.max || Infinity);
           break;
         case 'date':
@@ -557,41 +559,14 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       return;
     }
 
-    // Validate current step fields before proceeding
-    if (currentStep.fields && currentStep.fields.length > 0) {
-      try {
-        // Trigger validation for all current step fields
-        const fieldIds = currentStep.fields.map(field => field.id);
-        const isValid = await trigger(fieldIds);
-        
-        if (isValid) {
-          // If validation passes, proceed to next step
-          if (activeStep === steps.length - 1) {
-            // This is the last step, show success message
-            setShowSuccess(true);
-            // Reset form after showing success
-            setTimeout(() => {
-              setShowSuccess(false);
-              setActiveStep(0);
-              setFormValues({});
-              setSignatures({});
-              setTableData({});
-              methods.reset();
-            }, 3000);
-          } else {
-            setActiveStep((prevActiveStep) => prevActiveStep + 1);
-          }
-        } else {
-          // Validation failed, errors will be displayed on the fields
-          console.log('Step validation failed - errors will be shown on fields');
-          return;
-        }
-      } catch (validationError) {
-        console.error('Step validation error:', validationError);
-        return;
-      }
-    } else {
-      // No fields in current step, proceed without validation
+    // Determine which fields in this step should be validated (interactive inputs only)
+    const interactiveTypes = new Set(['text','textarea','email','phone','number','quantity','date','dropdown','checkbox','radio','signature','attachment','link','richtext']);
+    const idsToValidate = Array.isArray(currentStep.fields)
+      ? currentStep.fields.filter(f => f && f.id && interactiveTypes.has(f.type)).map(f => f.id)
+      : [];
+
+    // If no interactive fields, proceed without validation
+    if (!idsToValidate.length) {
       if (activeStep === steps.length - 1) {
         setShowSuccess(true);
         setTimeout(() => {
@@ -605,6 +580,35 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
       } else {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
       }
+      return;
+    }
+
+    try {
+      const isValid = await trigger(idsToValidate);
+      if (isValid) {
+        if (activeStep === steps.length - 1) {
+          setShowSuccess(true);
+          setTimeout(() => {
+            setShowSuccess(false);
+            setActiveStep(0);
+            setFormValues({});
+            setSignatures({});
+            setTableData({});
+            methods.reset();
+          }, 3000);
+        } else {
+          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+        }
+      } else {
+        // Validation failed (errors will display on fields). As a safety net, advance if no step-specific errors exist.
+        const currentErrors = methods.formState?.errors || {};
+        const stepHasErrors = idsToValidate.some((id) => !!currentErrors[id]);
+        if (!stepHasErrors) {
+          setActiveStep((prevActiveStep) => prevActiveStep + 1);
+        }
+      }
+    } catch (validationError) {
+      console.error('Step validation error:', validationError);
     }
   };
 
@@ -825,26 +829,15 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
                 {/* Step Fields with Column Layout */}
                 <Box sx={{ mb: 2 }}>
                   {steps[activeStep].fields && steps[activeStep].fields.length > 0 ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {organizeFieldsForPreview(steps[activeStep].fields).map((rowFields, rowIndex) => (
-                        <Box key={rowIndex} sx={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: 'repeat(2, 1fr)',
-                          gap: 3
-                        }}>
-                          {rowFields.map((field) => (
-                            <Box key={field.id}>
-                              {renderField(field)}
-                            </Box>
-                          ))}
-                          {/* Fill empty space if odd number of fields */}
-                          {rowFields.length === 1 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Typography variant="body2" color="text.secondary">
-                                Empty
-                              </Typography>
-                            </Box>
-                          )}
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
+                      {steps[activeStep].fields.map((field) => (
+                        <Box
+                          key={field.id}
+                          sx={{
+                            gridColumn: field.gridSpan > 1 ? `span ${Math.min(field.gridSpan, 2)}` : undefined
+                          }}
+                        >
+                          {renderField(field)}
                         </Box>
                       ))}
                     </Box>
@@ -1174,6 +1167,45 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             }}
           />
         );
+
+      case 'quantity': {
+        const raw = watch(field.id);
+        const initial = Number.isFinite(raw) ? raw : (Number(field.defaultValue ?? 0) || 0);
+        const min = Number.isFinite(field.min) ? field.min : 0;
+        const max = Number.isFinite(field.max) ? field.max : Infinity;
+        const step = Number.isFinite(field.step) ? field.step : 1;
+        const value = Math.min(max, Math.max(min, initial));
+        const decrement = () => handleFieldChange(field.id, Math.max(min, value - step));
+        const increment = () => handleFieldChange(field.id, Math.min(max, value + step));
+        return (
+          <Box>
+            {field.label && (
+              <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>
+                {field.label}
+              </Typography>
+            )}
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: errors[field.id] ? 'error.main' : 'divider'
+              }}
+            >
+              <Button onClick={decrement} disabled={value <= min || field.disabled} sx={{ minWidth: 40 }} variant="contained" color="primary">-</Button>
+              <Box sx={{ px: 2, minWidth: 40, textAlign: 'center', bgcolor: 'background.paper' }}>{value}</Box>
+              <Button onClick={increment} disabled={value >= max || field.disabled} sx={{ minWidth: 40 }} variant="contained" color="primary">+</Button>
+            </Box>
+            {errors[field.id] && (
+              <FormHelperText error sx={{ mt: 0.5 }}>
+                {errors[field.id].message}
+              </FormHelperText>
+            )}
+          </Box>
+        );
+      }
 
       case 'calculated':
         return (
@@ -1508,17 +1540,9 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
             orientation={field.orientation || 'horizontal'}
             sx={{
               my: 1,
-              ...(field.label && String(field.label).trim() !== '' ? {} : {
-                borderColor: field.lineColor || 'divider',
-                borderStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
-                borderWidth: field.lineThickness ? `${field.lineThickness}px` : '1px'
-              }),
-              '&::before, &::after': {
-                borderTopColor: field.lineColor || 'divider',
-                borderTopStyle: (field.lineStyle === 'dotted' ? 'dashed' : (field.lineStyle || 'dashed')),
-                borderTopWidth: field.lineThickness ? `${field.lineThickness}px` : '1px',
-                borderColor: field.lineColor || 'divider'
-              }
+              borderStyle: field.lineStyle || 'solid',
+              borderColor: field.lineColor || 'divider',
+              borderBottomWidth: field.lineThickness || 1
             }}
           >
             {field.label || ''}
@@ -1526,11 +1550,7 @@ export default function FormRenderer({ formData, onSubmit, isSubmitting = false 
         );
 
       default:
-        return (
-          <Typography color="error">
-            Unknown field type: {field.type}
-          </Typography>
-        );
+        return null;
     }
   }
 }

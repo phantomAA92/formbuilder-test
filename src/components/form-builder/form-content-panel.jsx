@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useDrop } from 'react-dnd';
+import { useDrop } from 'react-dnd'; 
+import { useState, useEffect } from 'react';
 
 import {
   GridView
@@ -55,6 +55,11 @@ function GridCell({ row, col, field, onFieldUpdate, fields, gridColumns, selecte
         
         const updatedFields = [...fields, newField];
         onFieldUpdate('fields', updatedFields);
+
+        // If a wizard is dropped, switch grid to a single column
+        if (item.componentType === 'wizard') {
+          onFieldUpdate('gridColumns', 1);
+        }
       }
     },
     collect: (monitor) => ({
@@ -159,6 +164,11 @@ function EmptyDropZone({ onFieldUpdate, fields, gridColumns }) {
         
         const updatedFields = [...fields, newField];
         onFieldUpdate('fields', updatedFields);
+
+        // If a wizard is dropped, switch grid to a single column
+        if (item.componentType === 'wizard') {
+          onFieldUpdate('gridColumns', 1);
+        }
       }
     },
     collect: (monitor) => ({
@@ -205,6 +215,11 @@ export default function FormContentPanel({
   onFieldUpdate
 }) {
   const [gridColumns, setGridColumns] = useState(formData.gridColumns || 2);
+
+  // Keep local gridColumns in sync with incoming formData changes
+  useEffect(() => {
+    setGridColumns(formData.gridColumns || 2);
+  }, [formData.gridColumns]);
 
   const handleFieldResize = (fieldId, newGridSpan) => {
     onFieldUpdate(fieldId, { gridSpan: newGridSpan });

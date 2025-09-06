@@ -47,6 +47,7 @@ const fieldIcons = {
   checkbox: CheckBox,
   dropdown: ArrowDropDown,
   number: LooksOne,
+  quantity: LooksOne,
   calculated: Calculate,
   date: CalendarToday,
   attachment: AttachFile,
@@ -70,6 +71,7 @@ function getFallbackTitleByType(type) {
     checkbox: 'Checkboxes',
     dropdown: 'Dropdown',
     number: 'Number',
+    quantity: 'Quantity',
     calculated: 'Calculated',
     date: 'Date',
     attachment: 'File Upload',
@@ -373,6 +375,30 @@ export default function DraggableField({
               }}
             >
               {field.placeholder || 'Enter number...'}
+            </Box>
+          </Box>
+        );
+
+      case 'quantity':
+        return (
+          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              {field.label || 'Quantity'}
+            </Typography>
+            <Box
+              sx={{
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box sx={{ width: 40, bgcolor: 'primary.main', color: 'primary.contrastText', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</Box>
+              <Box sx={{ px: 2, minWidth: 40, textAlign: 'center', color: 'text.secondary', bgcolor: 'background.paper' }}>0</Box>
+              <Box sx={{ width: 40, bgcolor: 'primary.main', color: 'primary.contrastText', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</Box>
             </Box>
           </Box>
         );

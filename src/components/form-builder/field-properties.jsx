@@ -26,6 +26,7 @@ import {
 
 export default function FieldProperties({ field, onUpdate, availableFields = [] }) {
   const [localField, setLocalField] = useState(field);
+  const [selectedComponentTypeByStep, setSelectedComponentTypeByStep] = useState({});
 
   useEffect(() => {
     setLocalField(field);
@@ -85,6 +86,111 @@ export default function FieldProperties({ field, onUpdate, availableFields = [] 
     handleChange('steps', steps);
   };
 
+  // Helper: default data for components (mirrors left panel)
+  const getDefaultFieldDataForType = (type) => {
+    switch (type) {
+      case 'text':
+        return { label: 'Text Input', placeholder: 'Enter text...', required: false };
+      case 'email':
+        return { label: 'Email Input', placeholder: 'Enter email address...', required: false };
+      case 'phone':
+        return { label: 'Phone Number', placeholder: 'e.g., +1 (555) 123-4567', pattern: '^\\+?[0-9\\s()-]{7,20}$', errorMessage: 'Enter a valid phone number', required: false };
+      case 'textarea':
+        return { label: 'Text Area', placeholder: 'Enter text...', rows: 4, required: false };
+      case 'radio':
+        return { label: 'Radio Buttons', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
+      case 'checkbox':
+        return { label: 'Checkboxes', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
+      case 'dropdown':
+        return { label: 'Dropdown', options: ['Option 1', 'Option 2', 'Option 3'], required: false };
+      case 'number':
+        return { label: 'Number', placeholder: 'Enter number...', min: 0, max: 999999, required: false };
+      case 'quantity':
+        return { label: 'Quantity', min: 0, max: 9999, step: 1, defaultValue: 0, required: false };
+      case 'calculated':
+        return { label: 'Calculated', expression: '{field_a} + {field_b}', decimals: 2, prefix: '', suffix: '', displayType: 'number', dateFormat: 'MM/DD/YYYY', required: false };
+      case 'date':
+        return { label: 'Date', required: false };
+      case 'attachment':
+        return { label: 'File Upload', accept: '.pdf,.doc,.docx,.jpg,.png', multiple: false, required: false };
+      case 'link':
+        return { label: 'Link', placeholder: 'https://example.com', required: false };
+      case 'table':
+        return { label: 'Table', columns: ['Column 1', 'Column 2'], rows: 3, required: false };
+      case 'richtext':
+        return { label: 'Rich Text', placeholder: 'Enter rich text...', required: false };
+      case 'label':
+        return { label: 'Section Title', variant: 'h6', align: 'left', required: false };
+      case 'divider':
+        return { label: '', variant: 'fullWidth', textAlign: 'center', orientation: 'horizontal', lineStyle: 'dotted', lineColor: '#bdbdbd', lineThickness: 1, required: false };
+      case 'signature':
+        return { label: 'Signature', width: 300, height: 150, penColor: '#000000', required: false };
+      default:
+        return { label: 'New Field', required: false };
+    }
+  };
+
+  const formatTypeLabel = (type) => {
+    const labels = {
+      text: 'Text Input',
+      email: 'Email Input',
+      phone: 'Phone Number',
+      textarea: 'Text Area',
+      radio: 'Radio Buttons',
+      checkbox: 'Checkboxes',
+      dropdown: 'Dropdown',
+      number: 'Number Input',
+      quantity: 'Quantity',
+      calculated: 'Calculated',
+      date: 'Date Picker',
+      attachment: 'File Upload',
+      link: 'Link Input',
+      table: 'Table',
+      richtext: 'Rich Text',
+      label: 'Label',
+      divider: 'Divider',
+      signature: 'Signature'
+    };
+    return labels[type] || (type?.charAt(0).toUpperCase() + type?.slice(1));
+  };
+
+  const addFieldToStep = (stepIndex, componentType) => {
+    if (!componentType || componentType === 'wizard') return; // avoid nested wizards
+    const defaultData = getDefaultFieldDataForType(componentType);
+    const newField = {
+      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: componentType,
+      gridSpan: 1,
+      ...defaultData
+    };
+
+    const steps = [...(localField.steps || [])];
+    const targetStep = steps[stepIndex] || { title: `Step ${stepIndex + 1}`, fields: [] };
+    const stepFields = Array.isArray(targetStep.fields) ? [...targetStep.fields, newField] : [newField];
+    steps[stepIndex] = { ...targetStep, fields: stepFields };
+    handleChange('steps', steps);
+  };
+
+  const removeFieldFromStep = (stepIndex, fieldId) => {
+    const steps = [...(localField.steps || [])];
+    const targetStep = steps[stepIndex];
+    if (!targetStep) return;
+    const nextFields = (targetStep.fields || []).filter((f) => f.id !== fieldId);
+    steps[stepIndex] = { ...targetStep, fields: nextFields };
+    handleChange('steps', steps);
+  };
+
+  const updateStepField = (stepIndex, fieldId, updates) => {
+    const steps = [...(localField.steps || [])];
+    const targetStep = steps[stepIndex];
+    if (!targetStep) return;
+    const nextFields = (targetStep.fields || []).map((f) =>
+      f.id === fieldId ? { ...f, ...updates } : f
+    );
+    steps[stepIndex] = { ...targetStep, fields: nextFields };
+    handleChange('steps', steps);
+  };
+
   if (!field) return null;
 
   return (
@@ -140,15 +246,6 @@ export default function FieldProperties({ field, onUpdate, availableFields = [] 
                 label="Required Field"
               />
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={localField.disabled || false}
-                    onChange={(e) => handleChange('disabled', e.target.checked)}
-                  />
-                }
-                label="Disabled"
-              />
 
               {/* Grid Span Control */}
               <Box>
@@ -337,6 +434,51 @@ export default function FieldProperties({ field, onUpdate, availableFields = [] 
                   type="number"
                   value={localField.defaultValue || ''}
                   onChange={(e) => handleChange('defaultValue', parseFloat(e.target.value) || undefined)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+        );
+
+      case 'quantity':
+        return (
+          <Accordion defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle1" fontWeight={500}>Quantity Properties</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="Minimum"
+                  type="number"
+                  value={localField.min ?? 0}
+                  onChange={(e) => handleChange('min', parseFloat(e.target.value) ?? 0)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Maximum"
+                  type="number"
+                  value={localField.max ?? 9999}
+                  onChange={(e) => handleChange('max', parseFloat(e.target.value) ?? 9999)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Step"
+                  type="number"
+                  value={localField.step ?? 1}
+                  onChange={(e) => handleChange('step', parseFloat(e.target.value) ?? 1)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Default Value"
+                  type="number"
+                  value={localField.defaultValue ?? 0}
+                  onChange={(e) => handleChange('defaultValue', parseFloat(e.target.value) ?? 0)}
                   fullWidth
                   size="small"
                 />
@@ -562,27 +704,109 @@ export default function FieldProperties({ field, onUpdate, availableFields = [] 
                         multiline
                         rows={2}
                     />
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                          <Button
-                        color="error"
+
+                    {/* Step fields management */}
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Step Fields</Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                        {(step.fields || []).map((sf) => (
+                          <Chip
+                            key={sf.id}
                             size="small"
-                        startIcon={<Delete />}
-                        onClick={() => removeWizardStep(index)}
-                            variant="outlined"
-                      >
-                        Remove Step
-                          </Button>
-                        </Box>
+                            label={`${sf.label || formatTypeLabel(sf.type)}`}
+                            onDelete={() => removeFieldFromStep(index, sf.id)}
+                          />
+                        ))}
+                        {(!step.fields || step.fields.length === 0) && (
+                          <Typography variant="caption" color="text.secondary">No fields yet</Typography>
+                        )}
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                        <Select
+                          size="small"
+                          displayEmpty
+                          value={selectedComponentTypeByStep[index] || ''}
+                          onChange={(e) => setSelectedComponentTypeByStep((prev) => ({ ...prev, [index]: e.target.value }))}
+                          sx={{ minWidth: 200 }}
+                        >
+                          <MenuItem value="" disabled>Select component</MenuItem>
+                          {['text','email','phone','textarea','radio','checkbox','dropdown','number','quantity','calculated','date','attachment','link','table','richtext','label','divider','signature']
+                            .map((type) => (
+                              <MenuItem key={type} value={type}>{formatTypeLabel(type)}</MenuItem>
+                            ))}
+                        </Select>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Add />}
+                          onClick={() => addFieldToStep(index, selectedComponentTypeByStep[index])}
+                          disabled={!selectedComponentTypeByStep[index]}
+                        >
+                          Add
+                        </Button>
+                      </Box>
+
+                      {(step.fields || []).length > 0 && (
+                        <Stack spacing={1}>
+                          {(step.fields || []).map((sf) => (
+                            <Box key={sf.id}>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, alignItems: 'center' }}>
+                                <TextField
+                                  label="Label"
+                                  size="small"
+                                  value={sf.label || ''}
+                                  onChange={(e) => updateStepField(index, sf.id, { label: e.target.value })}
+                                />
+                                <TextField
+                                  label="Field ID"
+                                  size="small"
+                                  value={sf.id || ''}
+                                  onChange={(e) => updateStepField(index, sf.id, { id: e.target.value })}
+                                  helperText="Unique identifier"
+                                />
+                              </Box>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, alignItems: 'center', mt: 1 }}>
+                                <TextField
+                                  label="Placeholder"
+                                  size="small"
+                                  value={sf.placeholder || ''}
+                                  onChange={(e) => updateStepField(index, sf.id, { placeholder: e.target.value })}
+                                />
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      checked={sf.required || false}
+                                      onChange={(e) => updateStepField(index, sf.id, { required: e.target.checked })}
+                                    />
+                                  }
+                                  label="Required"
+                                />
+                              </Box>
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>Grid Width</Typography>
+                                <Select
+                                  size="small"
+                                  value={sf.gridSpan || 1}
+                                  onChange={(e) => updateStepField(index, sf.id, { gridSpan: e.target.value })}
+                                  fullWidth
+                                >
+                                  <MenuItem value={1}>1 Column</MenuItem>
+                                  <MenuItem value={2}>2 Columns</MenuItem>
+                                  <MenuItem value={3}>3 Columns</MenuItem>
+                                  <MenuItem value={4}>4 Columns</MenuItem>
+                                </Select>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
+                    </Box>
                   </Box>
                 ))}
-                <Button
-                  startIcon={<Add />}
-                  onClick={addWizardStep}
-                  variant="outlined"
-                                    size="small"
-                >
-                  Add Step
-                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button size="small" variant="outlined" startIcon={<Add />} onClick={addWizardStep}>Add Step</Button>
+                </Box>
               </Stack>
             </AccordionDetails>
           </Accordion>
@@ -619,7 +843,7 @@ export default function FieldProperties({ field, onUpdate, availableFields = [] 
                   size="small"
                   helperText="Use {field_id}, or AGE({dob}), YEARS_BETWEEN(a,b), MONTHS_BETWEEN(a,b), DAYS_BETWEEN(a,b)"
                 />
-
+                
                 {/* Presets */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   <Button size="small" variant="outlined" onClick={() => handleChange('expression', 'AGE({dob})')}>Age from {`{dob}`}</Button>
